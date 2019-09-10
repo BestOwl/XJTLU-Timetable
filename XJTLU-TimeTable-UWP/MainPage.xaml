@@ -1,0 +1,128 @@
+﻿<Page
+    x:Class="XJTLU_TimeTable_UWP.MainPage"
+    xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+    xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+    xmlns:local="using:XJTLU_TimeTable_UWP"
+    xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+    xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+    mc:Ignorable="d"
+    Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+    <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+        <VisualStateManager.VisualStateGroups>
+            <VisualStateGroup>
+                <VisualState x:Name="LoginState">
+                    <VisualState.Setters>
+                        <Setter Target="LoginPanel.Visibility" Value="Visible"/>
+                        <Setter Target="MainPanel.Visibility" Value="Collapsed"/>
+                        <Setter Target="ClassPreviewPanel.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="MainState">
+                    <VisualState.Setters>
+                        <Setter Target="MainPanel.Visibility" Value="Visible"/>
+                        <Setter Target="LoginPanel.Visibility" Value="Collapsed"/>
+                        <Setter Target="ClassPreviewPanel.Visibility" Value="Collapsed" />
+                    </VisualState.Setters>
+                </VisualState>
+                <VisualState x:Name="MainPreviewState">
+                    <VisualState.Setters>
+                        <Setter Target="MainPanel.Visibility" Value="Visible"/>
+                        <Setter Target="LoginPanel.Visibility" Value="Collapsed"/>
+                        <Setter Target="ClassPreviewPanel.Visibility" Value="Visible" />
+                    </VisualState.Setters>
+                </VisualState>
+            </VisualStateGroup>
+        </VisualStateManager.VisualStateGroups>
+
+        <Grid Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition/>
+                <ColumnDefinition/>
+            </Grid.ColumnDefinitions>
+
+            <StackPanel Margin="30" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+                <TextBlock Style="{StaticResource HeaderTextBlockStyle}" Text="XJTLU Timetable Helper" />
+                <TextBlock Text="This tool can automatically export your personal timetable to calendar." 
+                       TextWrapping="WrapWholeWords"/>
+                <TextBlock Text="{x:Bind ViewModel.CurrentDateDisplay, Mode=OneWay}" Margin="0,20,0,0"/>
+                <TextBlock Text="Please make sure your local system time is corret before you update timetable." 
+                       TextWrapping="WrapWholeWords"/>
+
+                <StackPanel x:Name="LoginPanel" Spacing="15" Margin="0,20,0,0"
+                        Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+                    <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="Please login your school account" />
+                    <TextBox Header="XJTLU Username" MinWidth="250" MaxWidth="450" HorizontalAlignment="Left" 
+                         Text="{x:Bind ViewModel.Username, Mode=TwoWay}" />
+                    <PasswordBox Header="Password" MinWidth="250" MaxWidth="450" HorizontalAlignment="Left" 
+                         x:Name="_PasswordBox" />
+                    <Button Content="Login" MinWidth="250" MaxWidth="450" 
+                         Style="{StaticResource ButtonRevealStyle}" Click="Button_Login_Click"
+                         IsEnabled="{x:Bind ViewModel.IsNotUpdating, Mode=OneWay}">
+                        <FlyoutBase.AttachedFlyout>
+                            <Flyout Placement="Bottom">
+                                <TextBlock Text="{x:Bind ViewModel.LoginResultDisplay, Mode=OneWay}"/>
+                            </Flyout>
+                        </FlyoutBase.AttachedFlyout>
+                    </Button>
+                    <ProgressBar IsIndeterminate="True" MinWidth="250" MaxWidth="450"  HorizontalAlignment="Left"
+                         Visibility="{x:Bind ViewModel.IsUpdating, Mode=OneWay}" />
+                </StackPanel>
+
+                <StackPanel x:Name="MainPanel" Spacing="15" Margin="0,20,0,0"
+                        Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
+
+                    <TextBlock Style="{StaticResource TitleTextBlockStyle}" Text="You've logined in as" />
+                    <TextBlock Text="{x:Bind ViewModel.Username, Mode=OneWay}" />
+
+                    <ComboBox Header="Remind me" MinWidth="250" MaxWidth="450"
+                         x:Name="_RemindSelectionBox" SelectionChanged="_RemindSelectionBox_SelectionChanged">
+                        <ComboBoxItem>Never</ComboBoxItem>
+                        <ComboBoxItem>0 minutes before</ComboBoxItem>
+                        <ComboBoxItem>5 minutes before</ComboBoxItem>
+                        <ComboBoxItem>10 minutes before</ComboBoxItem>
+                        <ComboBoxItem>15 minutes before</ComboBoxItem>
+                        <ComboBoxItem>30 minutes before</ComboBoxItem>
+                        <ComboBoxItem>1 hours before</ComboBoxItem>
+                        <ComboBoxItem>2 hours before</ComboBoxItem>
+                    </ComboBox>
+
+                    <Button Content="Update my personal timetable" Click="Button_UpdateTimetable_Click" 
+                         IsEnabled="{x:Bind ViewModel.IsNotUpdating, Mode=OneWay}"
+                         Style="{StaticResource ButtonRevealStyle}" MinWidth="250" MaxWidth="450"/>
+                    <ProgressBar IsIndeterminate="True" MinWidth="250" MaxWidth="450"  HorizontalAlignment="Left"
+                         Visibility="{x:Bind ViewModel.IsUpdating, Mode=OneWay}" />
+                    <Button Content="Change account" MinWidth="250" MaxWidth="450" 
+                         Style="{StaticResource ButtonRevealStyle}" Click="Button_Logout_Click"/>
+                </StackPanel>
+
+            </StackPanel>
+
+            <ListView Grid.Column="1" Margin="0,100,0,0"
+                      x:Name="ClassPreviewPanel"
+                      ItemsSource="{x:Bind ViewModel.ClassPreviewList, Mode=OneWay}">
+                <ListView.HeaderTemplate>
+                    <DataTemplate>
+                        <TextBlock Text="Class Preview" Style="{StaticResource SubheaderTextBlockStyle}"/>
+                    </DataTemplate>
+                </ListView.HeaderTemplate>
+                <ListView.ItemTemplate>
+                    <DataTemplate x:DataType="local:Class">
+                        <StackPanel Margin="0,5,0,5" >
+                            <TextBlock Text="{x:Bind ModuleCode}" Style="{StaticResource BaseTextBlockStyle}"/>
+                            <TextBlock Text="{x:Bind Location}" />
+                            <TextBlock Text="{x:Bind TimeStringDisplay}" />
+                        </StackPanel>
+                    </DataTemplate>
+                </ListView.ItemTemplate>
+            </ListView>
+        </Grid>
+
+        <ContentDialog x:Name="TokenExpiredDialog"
+                        Title="Your need to re-login your account"
+                        PrimaryButtonText="Ok"
+                        PrimaryButtonClick="TokenExpiredDialog_PrimaryButtonClick" d:IsHidden="True">
+            
+        </ContentDialog>
+    </Grid>
+</Page>
