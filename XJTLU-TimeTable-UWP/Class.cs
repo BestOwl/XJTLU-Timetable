@@ -4,7 +4,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 
-namespace XJTLU_TimeTable_UWP
+namespace XJTLU_Timetable_UWP
 {
     public class Class
     {

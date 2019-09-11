@@ -7,8 +7,8 @@
     <ProjectGuid>{2BD8CBD9-3861-4FA9-9390-9635B878FE91}</ProjectGuid>
     <OutputType>AppContainerExe</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>XJTLU_TimeTable_UWP</RootNamespace>
-    <AssemblyName>XJTLU-TimeTable-UWP</AssemblyName>
+    <RootNamespace>XJTLU_Timetable_UWP</RootNamespace>
+    <AssemblyName>XJTLU-Timetable-UWP</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.18362.0</TargetPlatformVersion>

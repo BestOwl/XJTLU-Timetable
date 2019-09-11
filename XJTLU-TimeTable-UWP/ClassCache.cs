@@ -6,7 +6,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.Storage;
 
-namespace XJTLU_TimeTable_UWP
+namespace XJTLU_Timetable_UWP
 {
     public class ClassCache
     {
