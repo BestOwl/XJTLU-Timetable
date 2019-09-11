@@ -1,4 +1,4 @@
-# XJTLU TimeTable
+# XJTLU Timetable
 ![license](https://img.shields.io/github/license/mashape/apistatus.svg?style=flat-square)
 
 Automatically export your timetable from XJTLU portal to Exchange calendar.
