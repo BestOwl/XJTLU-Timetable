@@ -56,6 +56,13 @@ namespace XJTLU_Timetable_UWP
             get => !IsUpdating;
         }
 
+        private bool _AutoUpdate;
+        public bool AutoUpdate
+        {
+            get => _AutoUpdate;
+            set => SetProperty(ref _AutoUpdate, value);
+        }
+
         public event PropertyChangedEventHandler PropertyChanged;
 
         private bool SetProperty<T>(ref T property, T value, [CallerMemberName] string propertyName = null)

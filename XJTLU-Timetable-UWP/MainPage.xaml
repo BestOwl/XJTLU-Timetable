@@ -41,8 +41,8 @@
             </Grid.ColumnDefinitions>
 
             <StackPanel Margin="30" Background="{ThemeResource ApplicationPageBackgroundThemeBrush}">
-                <TextBlock Style="{StaticResource HeaderTextBlockStyle}" Text="XJTLU Timetable Helper" />
-                <TextBlock Text="This tool can automatically export your personal timetable to calendar." 
+                <TextBlock Style="{StaticResource HeaderTextBlockStyle}" Text="XJTLU Timetable" />
+                <TextBlock Text="Automatically export your personal timetable to calendar." 
                        TextWrapping="WrapWholeWords"/>
                 <TextBlock Text="{x:Bind ViewModel.CurrentDateDisplay, Mode=OneWay}" Margin="0,20,0,0"/>
                 <TextBlock Text="Please make sure your local system time is corret before you update timetable." 
@@ -87,7 +87,12 @@
                         <ComboBoxItem>2 hours before</ComboBoxItem>
                     </ComboBox>
 
-                    <Button Content="Update my personal timetable" Click="Button_UpdateTimetable_Click" 
+                    <CheckBox Content="Auto update calendar in background"
+                              IsChecked="{x:Bind ViewModel.AutoUpdate, Mode=TwoWay}"
+                              Checked="CheckBox_AutoUpdate_Checked"
+                              Unchecked="CheckBox_AutoUpdate_Unchecked"/>
+
+                    <Button Content="Update my calendar" Click="Button_UpdateTimetable_Click" 
                          IsEnabled="{x:Bind ViewModel.IsNotUpdating, Mode=OneWay}"
                          Style="{StaticResource ButtonRevealStyle}" MinWidth="250" MaxWidth="450"/>
                     <ProgressBar IsIndeterminate="True" MinWidth="250" MaxWidth="450"  HorizontalAlignment="Left"

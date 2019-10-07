@@ -23,6 +23,7 @@ using System.Globalization;
 using Windows.Security.Credentials;
 using Windows.Storage;
 using System.Threading.Tasks;
+using Windows.ApplicationModel.Background;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -34,6 +35,9 @@ namespace XJTLU_Timetable_UWP
     public sealed partial class MainPage : Page
     {
         public MainPageViewModel ViewModel;
+
+        public const string BackgroundTaskName = "TimetableUpdateTask";
+        private BackgroundTaskRegistration BGUpdateTask;
 
         private string AccountId;
 
@@ -69,6 +73,16 @@ namespace XJTLU_Timetable_UWP
                 }
             }
 
+            ViewModel.AutoUpdate = true;
+            if (_Settings.Values.ContainsKey("auto-update"))
+            {
+                object obj = _Settings.Values["auto-update"];
+                if (obj is bool && (!(bool) obj) )
+                {
+                    ViewModel.AutoUpdate = false;
+                }
+            }
+
             // Check login status
             if (!_Settings.Values.ContainsKey("token") || string.IsNullOrEmpty(_Settings.Values["token"].ToString()))
             {
@@ -93,6 +107,8 @@ namespace XJTLU_Timetable_UWP
             credential.RetrievePassword();
             _Service.Credentials = new WebCredentials(credential.UserName, credential.Password, "xjtlu.edu.cn");
             VisualStateManager.GoToState(this, MainState.Name, true);
+
+            // post stage
             LoadPreview();
         }
 
@@ -390,6 +406,40 @@ success:
         private void _RemindSelectionBox_SelectionChanged(object sender, SelectionChangedEventArgs e)
         {
             _Settings.Values["remind-index"] = _RemindSelectionBox.SelectedIndex;
+        }
+
+        private void CheckBox_AutoUpdate_Checked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private void CheckBox_AutoUpdate_Unchecked(object sender, RoutedEventArgs e)
+        {
+
+        }
+
+        private async void RegisterBackgroundTask()
+        {
+            foreach (var task in BackgroundTaskRegistration.AllTasks)
+            {
+                if (task.Value.Name == BackgroundTaskName)
+                {
+                    return;
+                }
+            }
+
+            BackgroundTaskBuilder builder = new BackgroundTaskBuilder();
+            builder.Name = BackgroundTaskName;
+            builder.TaskEntryPoint = "Timetable_UWPBackground.CalendarUpdateTask";
+            builder.SetTrigger(new TimeTrigger(1440, false)); // 60 * 24, every day
+
+            await BackgroundExecutionManager.RequestAccessAsync();
+            BGUpdateTask = builder.Register();
+        }
+
+        private void UnregisterBackgroundTask()
+        {
+            BackgroundExecutionManager.RemoveAccess();
         }
     }
 }
