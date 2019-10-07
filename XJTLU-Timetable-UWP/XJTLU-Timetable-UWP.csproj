@@ -126,7 +126,6 @@
     <Compile Include="App.xaml.cs">
       <DependentUpon>App.xaml</DependentUpon>
     </Compile>
-    <Compile Include="ClassCacheManagerUWP.cs" />
     <Compile Include="LoginPage.xaml.cs">
       <DependentUpon>LoginPage.xaml</DependentUpon>
     </Compile>
@@ -235,6 +234,10 @@
     <ProjectReference Include="..\Timetable-UWPBackground\Timetable-UWPBackground.csproj">
       <Project>{ece072a6-94b0-436b-a824-38356cfe34a8}</Project>
       <Name>Timetable-UWPBackground</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\Timetable-UWPCacheManager\Timetable-UWPCacheManager.csproj">
+      <Project>{c07ac969-5f5e-4d2f-afad-bd5183a622f9}</Project>
+      <Name>Timetable-UWPCacheManager</Name>
     </ProjectReference>
   </ItemGroup>
   <ItemGroup>

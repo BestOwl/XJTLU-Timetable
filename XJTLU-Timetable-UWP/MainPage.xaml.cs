@@ -25,6 +25,7 @@ using Windows.Storage;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 using Timetable_Core;
+using Timetable_UWPCacheManager;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 

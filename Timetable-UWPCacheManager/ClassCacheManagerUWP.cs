@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Timetable_Core;
 using Windows.Storage;
 
-namespace XJTLU_Timetable_UWP
+namespace Timetable_UWPCacheManager
 {
     public class ClassCacheManagerUWP : ClassCacheManager
     {
