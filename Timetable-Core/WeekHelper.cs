@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace XJTLU_Timetable_UWP
+namespace Timetable_Core
 {
     public static class WeekHelper
     {

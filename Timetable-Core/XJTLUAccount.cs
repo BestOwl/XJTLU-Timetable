@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace XJTLU_Timetable_UWP
+namespace Timetable_Core
 {
     public class XJTLUAccount
     {

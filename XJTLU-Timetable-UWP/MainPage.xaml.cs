@@ -24,6 +24,7 @@ using Windows.Security.Credentials;
 using Windows.Storage;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
+using Timetable_Core;
 
 // The Blank Page item template is documented at https://go.microsoft.com/fwlink/?LinkId=402352&clcid=0x409
 
@@ -36,8 +37,13 @@ namespace XJTLU_Timetable_UWP
     {
         public MainPageViewModel ViewModel;
 
-        public const string BackgroundTaskName = "TimetableUpdateTask";
+        public const string BGUpdateTask_Name = "TimetableUpdateTask";
+        public const string BGUpdateTask_EntryPoint = "Timetable_UWPBackground.CalendarUpdateTask";
         private BackgroundTaskRegistration BGUpdateTask;
+
+        public const string BGServiceCompleteTask_Name = "ServiceCompleteTask";
+        public const string BGServiceCOmpleteTask_EntryPoint = "Timetable_UWPBackground.ServiceComplete";
+        private BackgroundTaskRegistration BGServiceCompleteTask;
 
         private string AccountId;
 
@@ -110,11 +116,12 @@ namespace XJTLU_Timetable_UWP
 
             // post stage
             LoadPreview();
+            RegisterBackgroundTask();
         }
 
         private async void LoadPreview()
         {
-            ClassCache cache = await ClassCache.LoadCache(WeekHelper.GetStartDayOfWeek(), AccountId);
+            ClassCache cache = await ClassCacheManagerUWP.Instance.LoadCache(WeekHelper.GetStartDayOfWeek(), AccountId);
             if (cache != null)
             {
                 UpdateAndDisplayPreview(cache.ClassList);
@@ -229,10 +236,10 @@ namespace XJTLU_Timetable_UWP
                 return;
             }
 
-            ClassCache cache= await ClassCache.LoadCache(startOfWeek, AccountId);
+            ClassCache cache= await ClassCacheManagerUWP.Instance.LoadCache(startOfWeek, AccountId);
             await UpdateTimetable(table1, cache, startOfWeek);
 
-            cache = await ClassCache.LoadCache(startOfNextWeek, AccountId);
+            cache = await ClassCacheManagerUWP.Instance.LoadCache(startOfNextWeek, AccountId);
             await UpdateTimetable(table2, cache, startOfNextWeek);
 
             UpdateAndDisplayPreview(table1);
@@ -410,36 +417,57 @@ success:
 
         private void CheckBox_AutoUpdate_Checked(object sender, RoutedEventArgs e)
         {
-
+            RegisterBackgroundTask();
         }
 
         private void CheckBox_AutoUpdate_Unchecked(object sender, RoutedEventArgs e)
         {
-
+            UnregisterBackgroundTask();
         }
 
         private async void RegisterBackgroundTask()
         {
+            bool regUpdate = false;
+            bool regService = false;
             foreach (var task in BackgroundTaskRegistration.AllTasks)
             {
-                if (task.Value.Name == BackgroundTaskName)
+                if (task.Value.Name == BGUpdateTask_Name)
                 {
-                    return;
+                    regUpdate = true;
+                }
+                if (task.Value.Name == BGServiceCompleteTask_Name)
+                {
+                    regService = true;
                 }
             }
 
-            BackgroundTaskBuilder builder = new BackgroundTaskBuilder();
-            builder.Name = BackgroundTaskName;
-            builder.TaskEntryPoint = "Timetable_UWPBackground.CalendarUpdateTask";
-            builder.SetTrigger(new TimeTrigger(1440, false)); // 60 * 24, every day
-
             await BackgroundExecutionManager.RequestAccessAsync();
-            BGUpdateTask = builder.Register();
+
+            if (!regUpdate)
+            {
+                BackgroundTaskBuilder builder = new BackgroundTaskBuilder();
+                builder.Name = BGUpdateTask_Name;
+                builder.TaskEntryPoint = BGUpdateTask_EntryPoint;
+                builder.SetTrigger(new TimeTrigger(1440, false)); // 60 * 24, every day
+                BGUpdateTask = builder.Register();
+            }
+
+            if (!regService)
+            {
+                BackgroundTaskBuilder builder = new BackgroundTaskBuilder();
+                builder.Name = BGServiceCompleteTask_Name;
+                builder.TaskEntryPoint = BGServiceCOmpleteTask_EntryPoint;
+                builder.SetTrigger(new SystemTrigger(SystemTriggerType.ServicingComplete, false));
+                BGServiceCompleteTask = builder.Register();
+            }
         }
 
         private void UnregisterBackgroundTask()
         {
-            BackgroundExecutionManager.RemoveAccess();
+            if (BGUpdateTask != null)
+            {
+                BGUpdateTask.Unregister(false);
+            }
         }
     }
 }

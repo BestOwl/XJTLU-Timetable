@@ -16,7 +16,7 @@ namespace Timetable_UWPBackground
         {
             _deferral = taskInstance.GetDeferral();
             taskInstance.Task.Completed += Task_Completed;
-
+            await Task.Run(() => { });
 
             _deferral.Complete();
         }

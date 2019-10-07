@@ -1,62 +1,48 @@
 ﻿using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
-using System.Linq;
+using System.IO;
 using System.Text;
 using System.Threading.Tasks;
-using Windows.Storage;
 
-namespace XJTLU_Timetable_UWP
+namespace Timetable_Core
 {
-    public class ClassCache
+    public abstract class ClassCacheManager
     {
-        public DateTime StartOfWeek { get; set; }
-        public List<Class> ClassList { get; set; } = new List<Class>();
-        public int ReminderSelectionIndex { get; set; }
-        public string UserName { get; set; }
-
-        [JsonIgnore]
-        public string CacheFileName;
-
-        public ClassCache(DateTime startOfWeek, List<Class> classList, string studenId)
-        {
-            StartOfWeek = startOfWeek;
-            ClassList = classList;
-            CacheFileName = GetCacheFileName(studenId, startOfWeek);
-        }
-
-        public static string GetCacheFileName(string studentId, DateTime startOfWeek)
+        public string GetCacheFileName(string studentId, DateTime startOfWeek)
         {
             return string.Format(@"cache\{0}\timetable-{1}.json", studentId, WeekHelper.GetDateStr(startOfWeek));
         }
 
-        public async Task SaveCache()
-        {
-            StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(CacheFileName, CreationCollisionOption.ReplaceExisting);
-            await FileIO.WriteTextAsync(file, JsonConvert.SerializeObject(this));
-        }
+        public abstract string GetCacheFilePath(string studentId, DateTime startOfWeek);
 
-        public static async Task<ClassCache> LoadCache(DateTime startOfWeek, string studentId)
+        public async Task<ClassCache> LoadCache(DateTime startOfWeek, string studentId)
         {
             if (string.Equals("0000-0000-0000-0000", studentId))
             {
                 return LoadTestCache();
             }
 
-            StorageFile file = await ApplicationData.Current.LocalFolder.CreateFileAsync(GetCacheFileName(studentId, startOfWeek), CreationCollisionOption.OpenIfExists);
-            if (file == null)
+            await Task.Run(() =>
             {
-                return null;
-            }
-            try
-            {
-                return JsonConvert.DeserializeObject<ClassCache>(await FileIO.ReadTextAsync(file));
-            }
-            catch
-            {
-                await file.DeleteAsync();
-                return null;
-            }
+                string path = GetCacheFilePath(studentId, startOfWeek);
+                if (!File.Exists(path))
+                {
+                    return null;
+                }
+
+                try
+                {
+                    return JsonConvert.DeserializeObject<ClassCache>(File.ReadAllText(path));
+                }
+                catch
+                {
+                    File.Delete(path);
+                    return null;
+                }
+            });
+
+            return null;
         }
 
         // To meet the Microsoft Store submission requirement.
@@ -113,28 +99,6 @@ namespace XJTLU_Timetable_UWP
                 EndTime = new DateTime(2019, 09, 06, 13, 00, 00)
             });
             return ret;
-        }
-
-        public bool IsLatestCache(List<Class> latestClassList, int reminderIndex)
-        {
-            if (ClassList.Count != latestClassList.Count)
-            {
-                return false;
-            }
-            if (ReminderSelectionIndex != reminderIndex)
-            {
-                return false;
-            }
-
-            for (int i = 0; i < ClassList.Count; i++)
-            {
-                if (!ClassList[i].IsSameClass(latestClassList[i]))
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
     }
 }
