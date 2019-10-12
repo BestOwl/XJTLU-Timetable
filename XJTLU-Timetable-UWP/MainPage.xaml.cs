@@ -48,7 +48,6 @@ namespace XJTLU_Timetable_UWP
 
         private string AccountId;
 
-        private ExchangeService _Service;
         private ApplicationDataContainer _Settings;
 
         public MainPage()
@@ -56,9 +55,6 @@ namespace XJTLU_Timetable_UWP
             this.InitializeComponent();
             ViewModel = new MainPageViewModel();
             ViewModel.CurrentDateDisplay = "Current date: " + DateTime.Now.ToShortDateString();
-
-            _Service = new ExchangeService();
-            _Service.Url = new Uri("https://mail.xjtlu.edu.cn/EWS/Exchange.asmx");
 
             _Settings = ApplicationData.Current.LocalSettings;
             if (!_Settings.Values.ContainsKey("remind-index"))
@@ -112,7 +108,7 @@ namespace XJTLU_Timetable_UWP
             PasswordVault vault = new PasswordVault();
             PasswordCredential credential = vault.Retrieve("XJTLUAccount", ViewModel.Username);
             credential.RetrievePassword();
-            _Service.Credentials = new WebCredentials(credential.UserName, credential.Password, "xjtlu.edu.cn");
+            ClassCacheManagerUWP.Instance.Service.Credentials = new WebCredentials(credential.UserName, credential.Password, "xjtlu.edu.cn");
             VisualStateManager.GoToState(this, MainState.Name, true);
 
             // post stage
@@ -224,28 +220,21 @@ namespace XJTLU_Timetable_UWP
                 goto success;
             }
 
-            DateTime startOfWeek = WeekHelper.GetStartDayOfWeek();
-            DateTime endOfWeek = startOfWeek.AddDays(WeekHelper.Interval_EndOfWeek);
-            DateTime startOfNextWeek = startOfWeek.AddDays(WeekHelper.Interval_StartOfNextWeek);
-            DateTime endOfNextWeek = startOfWeek.AddDays(WeekHelper.Interval_EndOfNextWeek);
-
-            List<Class> table1 = await GetTimetable(startOfWeek, endOfWeek);
-            List<Class> table2 = await GetTimetable(startOfNextWeek, endOfNextWeek);
-            if (table1 == null && table2 == null)
+            string token = ApplicationData.Current.LocalSettings.Values["token"].ToString();
+            var result = await ClassCacheManagerUWP.Instance.UpdateTimetable(AccountId, token, _RemindSelectionBox.SelectedIndex);
+            if (!result.success)
             {
                 await TokenExpiredDialog.ShowAsync();
                 return;
             }
 
-            ClassCache cache= await ClassCacheManagerUWP.Instance.LoadCache(startOfWeek, AccountId);
-            await UpdateTimetable(table1, cache, startOfWeek);
+            List<Class> table1 = result.classCaches.First()?.ClassList;
+            if (table1 != null)
+            {
+                UpdateAndDisplayPreview(table1);
+            }
 
-            cache = await ClassCacheManagerUWP.Instance.LoadCache(startOfNextWeek, AccountId);
-            await UpdateTimetable(table2, cache, startOfNextWeek);
-
-            UpdateAndDisplayPreview(table1);
-
-success:
+        success:
             ToastContent toastContent = new ToastContent()
             {
                 Visual = new ToastVisual()
@@ -254,8 +243,8 @@ success:
                     {
                         Children =
                         {
-                            new  AdaptiveText { Text = "XJTLU Timetable Helper" },
-                            new  AdaptiveText { Text = "Your timetable have been exported to calendar" }
+                            new  AdaptiveText { Text = "XJTLU Timetable" },
+                            new  AdaptiveText { Text = "Your calendar has been updated" }
                         }
                     }
                 }
@@ -266,129 +255,6 @@ success:
             ToastNotificationManager.CreateToastNotifier().Show(toastNotif);
 
             ViewModel.IsUpdating = false;
-        }
-
-        private async System.Threading.Tasks.Task UpdateTimetable(List<Class> table, ClassCache cache, DateTime startOfWeek)
-        {
-            if (cache != null)
-            {
-                if (cache.IsLatestCache(table, _RemindSelectionBox.SelectedIndex))
-                {
-                    return;
-                }
-                else
-                {
-                    // Delete appointment from calendar
-                    CalendarFolder calendarFolder = await CalendarFolder.Bind(_Service, WellKnownFolderName.Calendar);
-                    Microsoft.Exchange.WebServices.Data.CalendarView calendarView =
-                        new Microsoft.Exchange.WebServices.Data.CalendarView(cache.StartOfWeek, cache.GetEndDayOfWeek());
-                    FindItemsResults<Appointment> items = await calendarFolder.FindAppointments(calendarView);
-                    foreach (Class cls in cache.ClassList)
-                    {
-                        foreach (Appointment apt in items)
-                        {
-                            if (Equals(cls.AppointmentId, apt.Id.UniqueId))
-                            {
-                                await apt.Delete(DeleteMode.MoveToDeletedItems);
-                                break;
-                            }
-                        }
-                    }
-
-                    cache.ClassList = table;
-                }
-            }
-            else
-            {
-                cache = new ClassCache(startOfWeek, table, AccountId);
-            }
-
-            // Add appointment to calendar
-            await ExportToExchangeCalendar(table);
-            await cache.SaveCache();
-        }
-
-        private async Task<List<Class>> GetTimetable(DateTime from, DateTime to)
-        {
-            try
-            {
-                using (HttpClient client = new HttpClient())
-                {
-                    string token = ApplicationData.Current.LocalSettings.Values["token"].ToString();
-                    string id = ApplicationData.Current.LocalSettings.Values["id"].ToString();
-
-                    // Get timetable
-                    string _url = "http://portalapp.xjtlu.edu.cn/edu-app/api/userTimeTable/findStudentsTimeTablesById?userId={0}&userType=S&fromDate={1}&toDate={2}";
-                    client.DefaultRequestHeaders.Add("Authorization", token);
-                    HttpResponseMessage response = await client.GetAsync(string.Format(_url, id, WeekHelper.GetDateStr(from), WeekHelper.GetDateStr(to)));
-                    if (response.StatusCode != System.Net.HttpStatusCode.OK)
-                    {
-                        return null;
-                    }
-                    string responseStr = await response.Content.ReadAsStringAsync();
-
-                    JObject rootObj = JObject.Parse(responseStr);
-                    return rootObj["data"]["timeTables"].ToObject<List<Class>>();
-                }
-            }
-            catch
-            {
-                return null;
-            }
-        }
-
-        private async System.Threading.Tasks.Task ExportToExchangeCalendar(List<Class> classList)
-        {
-            // TODO: Validate exsisting appointment
-            foreach (Class cls in classList)
-            {
-                Appointment appointment = new Appointment(_Service);
-                appointment.IsAllDayEvent = false;
-
-                appointment.Subject = cls.ModuleCode;
-                appointment.Start = cls.StartTime;
-                appointment.End = cls.EndTime;
-                appointment.Location = cls.Location;
-                appointment.Sensitivity = Sensitivity.Private;
-
-                StringBuilder builder = new StringBuilder();
-                builder.AppendLine(cls.ModuleTypeGroup);
-                builder.AppendLine(cls.StaffName);
-                builder.AppendLine(cls.ModuleType);
-                appointment.Body = new MessageBody(BodyType.Text, builder.ToString());
-
-                switch (_RemindSelectionBox.SelectedIndex)
-                {
-                    case 0:
-                        appointment.IsReminderSet = false;
-                        break;
-                    case 1:
-                        appointment.ReminderMinutesBeforeStart = 0;
-                        break;
-                    case 2:
-                        appointment.ReminderMinutesBeforeStart = 5;
-                        break;
-                    case 3:
-                        appointment.ReminderMinutesBeforeStart = 10;
-                        break;
-                    case 4:
-                        appointment.ReminderMinutesBeforeStart = 15;
-                        break;
-                    case 5:
-                        appointment.ReminderMinutesBeforeStart = 30;
-                        break;
-                    case 6:
-                        appointment.ReminderMinutesBeforeStart = 60;
-                        break;
-                    case 7:
-                        appointment.ReminderMinutesBeforeStart = 120;
-                        break;
-                }
-
-                // TODO: Retry after saving failed (networking issue)
-                await appointment.Save();
-                cls.AppointmentId = appointment.Id.UniqueId;
-            }
         }
 
         private void Button_Logout_Click(object sender, RoutedEventArgs e)
