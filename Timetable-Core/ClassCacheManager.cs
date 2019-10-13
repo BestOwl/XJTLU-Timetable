@@ -13,6 +13,7 @@ namespace Timetable_Core
     public abstract class ClassCacheManager
     {
         public ExchangeService Service;
+        public bool IsTestAccount = false;
 
         public ClassCacheManager()
         {
@@ -20,40 +21,41 @@ namespace Timetable_Core
             Service.Url = new Uri("https://mail.xjtlu.edu.cn/EWS/Exchange.asmx");
         }
 
-        public string GetCacheFileName(string studentId, DateTime startOfWeek)
+        public string GetCacheFileName(string accountId, DateTime startOfWeek)
         {
-            return string.Format(@"cache\{0}\timetable-{1}.json", studentId, WeekHelper.GetDateStr(startOfWeek));
+            return string.Format(@"cache\{0}\timetable-{1}.json", accountId, WeekHelper.GetDateStr(startOfWeek));
         }
 
-        public abstract string GetCacheFilePath(string studentId, DateTime startOfWeek);
+        public abstract Task<Stream> GetCacheFileAsync(string accountId, DateTime startOfWeek);
 
-        public async Task<ClassCache> LoadCache(DateTime startOfWeek, string studentId)
+        /// <summary>
+        /// Delete specific cache file
+        /// </summary>
+        /// <returns>Indicates whether the file was successfully deleted.</returns>
+        public abstract Task<bool> DeleteCacheFileAsync(string accountId, DateTime startOfWeek);
+
+        public async Task<ClassCache> LoadCache(DateTime startOfWeek, string accountId)
         {
-            if (string.Equals("0000-0000-0000-0000", studentId))
+            if (IsTestAccount)
             {
                 return LoadTestCache();
             }
 
-            await System.Threading.Tasks.Task.Run(() =>
+            using (Stream stream = await GetCacheFileAsync(accountId, startOfWeek))
             {
-                string path = GetCacheFilePath(studentId, startOfWeek);
-                if (!File.Exists(path))
+                using (StreamReader reader = new StreamReader(stream))
                 {
-                    return null;
+                    try
+                    {
+                        return JsonConvert.DeserializeObject<ClassCache>(await reader.ReadToEndAsync());
+                    }
+                    catch
+                    {
+                        await GetCacheFileAsync(accountId, startOfWeek);
+                        return null;
+                    }
                 }
-
-                try
-                {
-                    return JsonConvert.DeserializeObject<ClassCache>(File.ReadAllText(path));
-                }
-                catch
-                {
-                    File.Delete(path);
-                    return null;
-                }
-            });
-
-            return null;
+            }
         }
 
         public async Task<(bool success, List<ClassCache> classCaches)> UpdateTimetable(string accountId, string token, int reminderIndex)
@@ -115,12 +117,12 @@ namespace Timetable_Core
             }
             else
             {
-                cache = new ClassCache(startOfWeek, table, accountId);
+                cache = new ClassCache(startOfWeek, table);
             }
 
             // Add appointment to calendar
             await ExportToExchangeCalendar(table, reminderIndex);
-            await cache.SaveCache();
+            await cache.SaveCache(await GetCacheFileAsync(accountId, startOfWeek));
         }
 
         private async Task<List<Class>> GetTimetable(DateTime from, DateTime to, string accountId, string token)
@@ -206,7 +208,7 @@ namespace Timetable_Core
         // To meet the Microsoft Store submission requirement.
         public static ClassCache LoadTestCache()
         {
-            ClassCache ret = new ClassCache(WeekHelper.GetStartDayOfWeek(), new List<Class>(), "0000-0000-0000-0000");
+            ClassCache ret = new ClassCache(WeekHelper.GetStartDayOfWeek(), new List<Class>());
             ret.ClassList.Add(new Class
             {
                 ModuleCode = "EAP021",
