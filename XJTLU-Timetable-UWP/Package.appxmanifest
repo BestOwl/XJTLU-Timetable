@@ -9,7 +9,7 @@
   <Identity
     Name="11602GoodTimeStudio.XJTLUTimetable"
     Publisher="CN=26FBF7DF-0382-4C02-8985-D8DE01CEF4A3"
-    Version="1.0.6.0" />
+    Version="1.0.7.0" />
 
   <mp:PhoneIdentity PhoneProductId="474e4594-af6e-4a49-8162-2612d49db5cc" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 

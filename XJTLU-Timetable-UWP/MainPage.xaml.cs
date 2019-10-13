@@ -151,6 +151,7 @@ namespace XJTLU_Timetable_UWP
             if (account.IsTestAccount())
             {
                 VisualStateManager.GoToState(this, MainState.Name, true);
+                ClassCacheManagerUWP.Instance.IsTestAccount = true;
                 ViewModel.IsUpdating = false;
                 AccountId = "0000-0000-0000-0000";
                 LoadPreview();
