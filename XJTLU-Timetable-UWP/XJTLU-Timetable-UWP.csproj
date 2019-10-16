@@ -228,10 +228,6 @@
     </PackageReference>
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Timetable-Core\Timetable-Core.csproj">
-      <Project>{986dde4b-5f41-4c40-93db-17d5c764d29f}</Project>
-      <Name>Timetable-Core</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Timetable-UWPBackground\Timetable-UWPBackground.csproj">
       <Project>{ece072a6-94b0-436b-a824-38356cfe34a8}</Project>
       <Name>Timetable-UWPBackground</Name>
