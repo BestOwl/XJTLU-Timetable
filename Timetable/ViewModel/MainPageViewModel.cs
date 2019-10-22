@@ -8,19 +8,22 @@ namespace Timetable.ViewModel
 {
     public class MainPageViewModel : BindableBase
     {
-        private ObservableCollection<Class> _ClassList;
+        private ObservableCollection<Class> _ClassList = new ObservableCollection<Class>();
         public ObservableCollection<Class> ClassList
         {
             get => _ClassList;
             set => SetProperty(ref _ClassList, value);
         }
 
-        private bool _BackgroundUpdate;
-        public bool BackgroundUpdate
+        private bool _IsRefreshing = false;
+        public bool IsRefreshing
         {
-            get => _BackgroundUpdate;
-            set => SetProperty(ref _BackgroundUpdate, value);
+            get { return _IsRefreshing; }
+            set
+            {
+                SetProperty(ref _IsRefreshing, value);
+            }
         }
-        
+
     }
 }

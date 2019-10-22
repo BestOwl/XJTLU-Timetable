@@ -27,9 +27,15 @@ namespace Timetable
             set => Preferences.Set("background-update", value);
         }
 
+        public static bool UpdateToExchange
+        {
+            get => Preferences.Get("calendar-exchange", true);
+            set => Preferences.Set("calendar-exchange", value);
+        }
+
         public static int ReminderIndex
         {
-            get => Preferences.Get("reminder-index", 1);
+            get => Preferences.Get("reminder-index", (int) Reminders.Before15Minutes);
             set => Preferences.Set("reminder-index", value);
         }
 
@@ -51,6 +57,11 @@ namespace Timetable
         public static async Task SetToken(string token)
         {
             await SecureStorage.SetAsync("token", token);
+        }
+
+        public static void ClearToken()
+        {
+            SecureStorage.Remove("token");
         }
 
         public static async void SaveAccount(XJTLUAccount acc)

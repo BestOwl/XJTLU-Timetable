@@ -14,26 +14,27 @@ namespace Timetable.Core
         public List<Class> ClassList { get; set; } = new List<Class>();
         public int ReminderSelectionIndex { get; set; }
 
-        public ClassCache(DateTime startOfWeek, List<Class> classList)
+        [JsonIgnore]
+        public FileInfo Path { get; set; }
+
+        public ClassCache(DateTime startOfWeek, List<Class> classList, FileInfo path)
         {
             StartOfWeek = startOfWeek;
             ClassList = classList;
+            Path = path;
         }
 
-        public async Task SaveCache(Stream fileStream)
+        public async Task SaveCache()
         {
-            if (fileStream == null)
+            await Task.Run(() =>
             {
-                return;
-            }
-
-            using (fileStream)
-            {
-                using (StreamWriter writer = new StreamWriter(fileStream))
+                if (!Path.Directory.Exists)
                 {
-                    await writer.WriteAsync(JsonConvert.SerializeObject(this, Formatting.Indented));
+                    Path.Directory.Create();
                 }
-            }
+
+                File.WriteAllText(Path.FullName, JsonConvert.SerializeObject(this, Formatting.Indented));
+            });
         }
 
         public bool IsLatestCache(List<Class> latestClassList, int reminderIndex)

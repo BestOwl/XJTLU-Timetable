@@ -7,13 +7,16 @@ using System.IO;
 using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
+using Xamarin.Essentials;
 
 namespace Timetable.Core
 {
-    public abstract class ClassCacheManager
+    public class ClassCacheManager
     {
         public ExchangeService Service;
         public bool IsTestAccount = false;
+
+        public static ClassCacheManager Instance = new ClassCacheManager();
 
         public ClassCacheManager()
         {
@@ -21,18 +24,15 @@ namespace Timetable.Core
             Service.Url = new Uri("https://mail.xjtlu.edu.cn/EWS/Exchange.asmx");
         }
 
-        public string GetCacheFileName(string accountId, DateTime startOfWeek)
+        public static string GetCacheFileName(string accountId, DateTime startOfWeek)
         {
             return string.Format(@"cache\{0}\timetable-{1}.json", accountId, WeekHelper.GetDateStr(startOfWeek));
         }
 
-        public abstract Task<Stream> GetCacheFileAsync(string accountId, DateTime startOfWeek);
-
-        /// <summary>
-        /// Delete specific cache file
-        /// </summary>
-        /// <returns>Indicates whether the file was successfully deleted.</returns>
-        public abstract Task<bool> DeleteCacheFileAsync(string accountId, DateTime startOfWeek);
+        public static string GetCacheFilePath(string accountId, DateTime startOfWeek)
+        {
+            return FileSystem.CacheDirectory + "/" + GetCacheFileName(accountId, startOfWeek);
+        }
 
         public async Task<ClassCache> LoadCache(DateTime startOfWeek, string accountId)
         {
@@ -41,49 +41,52 @@ namespace Timetable.Core
                 return LoadTestCache();
             }
 
-            using (Stream stream = await GetCacheFileAsync(accountId, startOfWeek))
+            string path = GetCacheFilePath(accountId, startOfWeek);
+            return await System.Threading.Tasks.Task.Run(() =>
             {
-                using (StreamReader reader = new StreamReader(stream))
+                if (!File.Exists(path))
                 {
-                    try
-                    {
-                        return JsonConvert.DeserializeObject<ClassCache>(await reader.ReadToEndAsync());
-                    }
-                    catch
-                    {
-                        await GetCacheFileAsync(accountId, startOfWeek);
-                        return null;
-                    }
+                    return null;
                 }
-            }
+                try
+                {
+                    ClassCache ret = JsonConvert.DeserializeObject<ClassCache>(File.ReadAllText(path));
+                    ret.Path = new FileInfo(path);
+                    return ret;
+                }
+                catch (JsonException)
+                {
+                    File.Delete(path);
+                    return null;
+                }
+            });
         }
 
-        public async Task<(bool success, List<ClassCache> classCaches)> UpdateTimetable(string accountId, string token, int reminderIndex)
+        public async Task<(bool TokenExpired, List<ClassCache> classCaches)> UpdateTimetable(string accountId, string token, int reminderIndex, int weekCount)
         {
             DateTime startOfWeek = WeekHelper.GetStartDayOfWeek();
             DateTime endOfWeek = startOfWeek.AddDays(WeekHelper.Interval_EndOfWeek);
-            DateTime startOfNextWeek = startOfWeek.AddDays(WeekHelper.Interval_StartOfNextWeek);
-            DateTime endOfNextWeek = startOfWeek.AddDays(WeekHelper.Interval_EndOfNextWeek);
-
-            List<Class> table1 = await GetTimetable(startOfWeek, endOfWeek, accountId, token);
-            List<Class> table2 = await GetTimetable(startOfNextWeek, endOfNextWeek, accountId, token);
-            if (table1 == null && table2 == null)
+            List<ClassCache> caches = new List<ClassCache>();
+            for (int i = 0; i < weekCount; i++)
             {
-                // Could not get timetable from portal, session timeout, need to re-login
-                return (false, null);
+                var result = await GetTimetable(startOfWeek, endOfWeek, accountId, token);
+                if (result.TokenExpired)
+                {
+                    return (true, null);
+                }
+
+                ClassCache cache = await LoadCache(startOfWeek, accountId);
+                if (result.Classes != null)
+                {
+                    await UpdateTimetableInternal(result.Classes, cache, startOfWeek, accountId, reminderIndex);
+                }
+                caches.Add(cache);
+
+                startOfWeek = startOfWeek.AddDays(WeekHelper.Interval_StartOfNextWeek);
+                endOfWeek = endOfWeek.AddDays(WeekHelper.Interval_StartOfNextWeek);
             }
 
-            List<ClassCache> ret = new List<ClassCache>();
-
-            ClassCache cache = await LoadCache(startOfWeek, accountId);
-            await UpdateTimetableInternal(table1, cache, startOfWeek, accountId, reminderIndex);
-            ret.Add(cache);
-
-            cache = await LoadCache(startOfNextWeek, accountId);
-            await UpdateTimetableInternal(table2, cache, startOfNextWeek, accountId, reminderIndex);
-            ret.Add(cache);
-
-            return (true, ret);
+            return (false, caches);
         }
 
         private async System.Threading.Tasks.Task UpdateTimetableInternal(List<Class> table, ClassCache cache, DateTime startOfWeek, string accountId, int reminderIndex)
@@ -97,35 +100,35 @@ namespace Timetable.Core
                 else
                 {
                     // Delete appointment from calendar
-                    CalendarFolder calendarFolder = await CalendarFolder.Bind(Service, WellKnownFolderName.Calendar);
-                    CalendarView calendarView = new CalendarView(cache.StartOfWeek, cache.GetEndDayOfWeek());
-                    FindItemsResults<Appointment> items = await calendarFolder.FindAppointments(calendarView);
-                    foreach (Class cls in cache.ClassList)
-                    {
-                        foreach (Appointment apt in items)
-                        {
-                            if (Equals(cls.AppointmentId, apt.Id.UniqueId))
-                            {
-                                await apt.Delete(DeleteMode.MoveToDeletedItems);
-                                break;
-                            }
-                        }
-                    }
+                    //CalendarFolder calendarFolder = await CalendarFolder.Bind(Service, WellKnownFolderName.Calendar);
+                    //CalendarView calendarView = new CalendarView(cache.StartOfWeek, cache.GetEndDayOfWeek());
+                    //FindItemsResults<Appointment> items = await calendarFolder.FindAppointments(calendarView);
+                    //foreach (Class cls in cache.ClassList)
+                    //{
+                    //    foreach (Appointment apt in items)
+                    //    {
+                    //        if (Equals(cls.AppointmentId, apt.Id.UniqueId))
+                    //        {
+                    //            await apt.Delete(DeleteMode.MoveToDeletedItems);
+                    //            break;
+                    //        }
+                    //    }
+                    //}
 
-                    cache.ClassList = table;
+                    //cache.ClassList = table;
                 }
             }
             else
             {
-                cache = new ClassCache(startOfWeek, table);
+                cache = new ClassCache(startOfWeek, table,  new FileInfo(GetCacheFilePath(accountId, startOfWeek)));
             }
 
             // Add appointment to calendar
-            await ExportToExchangeCalendar(table, reminderIndex);
-            await cache.SaveCache(await GetCacheFileAsync(accountId, startOfWeek));
+            //await ExportToExchangeCalendar(table, reminderIndex);
+            await cache.SaveCache();
         }
 
-        private async Task<List<Class>> GetTimetable(DateTime from, DateTime to, string accountId, string token)
+        private async Task<(bool TokenExpired, List<Class> Classes)> GetTimetable(DateTime from, DateTime to, string accountId, string token)
         {
             try
             {
@@ -135,19 +138,23 @@ namespace Timetable.Core
                     string _url = "http://portalapp.xjtlu.edu.cn/edu-app/api/userTimeTable/findStudentsTimeTablesById?userId={0}&userType=S&fromDate={1}&toDate={2}";
                     client.DefaultRequestHeaders.Add("Authorization", token);
                     HttpResponseMessage response = await client.GetAsync(string.Format(_url, accountId, WeekHelper.GetDateStr(from), WeekHelper.GetDateStr(to)));
+                    if (response.StatusCode == System.Net.HttpStatusCode.Forbidden)
+                    {
+                        return (true, null);
+                    }
                     if (response.StatusCode != System.Net.HttpStatusCode.OK)
                     {
-                        return null;
+                        return (false, null);
                     }
                     string responseStr = await response.Content.ReadAsStringAsync();
 
                     JObject rootObj = JObject.Parse(responseStr);
-                    return rootObj["data"]["timeTables"].ToObject<List<Class>>();
+                    return (false, rootObj["data"]["timeTables"].ToObject<List<Class>>());
                 }
             }
             catch
             {
-                return null;
+                return (false, null);
             }
         }
 
@@ -208,7 +215,7 @@ namespace Timetable.Core
         // To meet the Microsoft Store submission requirement.
         public static ClassCache LoadTestCache()
         {
-            ClassCache ret = new ClassCache(WeekHelper.GetStartDayOfWeek(), new List<Class>());
+            ClassCache ret = new ClassCache(WeekHelper.GetStartDayOfWeek(), new List<Class>(), new FileInfo("test.json"));
             ret.ClassList.Add(new Class
             {
                 ModuleCode = "EAP021",

@@ -8,34 +8,26 @@
              mc:Ignorable="d"
              x:Class="Timetable.MainPage">
     <ContentPage.Content>
-        <StackLayout Spacing="10" Margin="10" >
+        <StackLayout Spacing="10" Margin="10" HorizontalOptions="Start" >
             <StackLayout.BindingContext>
                 <vm:MainPageViewModel x:Name="ViewModel" />
             </StackLayout.BindingContext>
-            
-            <Button Text="Update Now" WidthRequest="150" />
-            <Label Text="Calender Settings" Style="{DynamicResource SubtitleStyle}" />
 
-            <Grid Margin="10,0,0,0">
-                <Grid.ColumnDefinitions>
-                    <ColumnDefinition Width="30"/>
-                    <ColumnDefinition />
-                </Grid.ColumnDefinitions>
-                <CheckBox IsChecked="{Binding BackgroundUpdate, Mode=TwoWay}" />
-                <Label Text="Auto update calendar in background" Grid.Column="1"/>
-            </Grid>
-            
-            <Label Text="Update timetable to this calendar:" Margin="10,0,0,0" />
-            <Label Text="Upcoming Classes" Style="{DynamicResource SubtitleStyle}" />
-            
-            <ListView ItemsSource="{Binding ClassList, Mode=OneWay}">
+            <Label Text="Upcoming classes" FontSize="Medium"/>
+
+            <ListView ItemsSource="{Binding ClassList, Mode=OneWay}" 
+                      IsPullToRefreshEnabled="True"
+                      IsRefreshing="{Binding IsRefreshing, Mode=OneWay}"
+                      Refreshing="ListView_Refreshing">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="model:Class">
-                        <StackLayout Margin="0,5,0,5" >
-                            <Label Text="{Binding ModuleCode}" Style="{DynamicResource ListItemTextStyle}"/>
-                            <Label Text="{Binding Location}" Style="{DynamicResource ListItemDetailTextStyle}" />
-                            <Label Text="{Binding TimeStringDisplay}" Style="{DynamicResource ListItemDetailTextStyle}" />
-                        </StackLayout>
+                        <ViewCell>
+                            <StackLayout Padding="5" >
+                                <Label Text="{Binding ModuleCode}" Style="{DynamicResource ListItemTextStyle}"/>
+                                <Label Text="{Binding Location}" Style="{DynamicResource ListItemDetailTextStyle}" />
+                                <Label Text="{Binding TimeStringDisplay}" Style="{DynamicResource ListItemDetailTextStyle}" />
+                            </StackLayout>
+                        </ViewCell>
                     </DataTemplate>
                 </ListView.ItemTemplate>
             </ListView>

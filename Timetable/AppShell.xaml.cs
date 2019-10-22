@@ -53,5 +53,9 @@ namespace Timetable
             }
         }
 
+        private void MenuItem_Logout_Clicked(object sender, EventArgs e)
+        {
+            MainPage.Instance.Logout();
+        }
     }
 }

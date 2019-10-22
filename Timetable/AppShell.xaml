@@ -14,11 +14,16 @@
         </StackLayout>
     </Shell.FlyoutHeader>
 
-    <MenuItem Text="Swich Account" />
+    <MenuItem Text="Swich Account" Clicked="MenuItem_Logout_Clicked" />
 
     <FlyoutItem Title="Timetable">
         <ShellContent ContentTemplate="{DataTemplate local:MainPage}"
                       Title="Timetable"/>
+    </FlyoutItem>
+
+    <FlyoutItem Title="Settings">
+        <ShellContent ContentTemplate="{DataTemplate local:SettingsPage}"
+                      Title="Settings" />
     </FlyoutItem>
     
     <FlyoutItem Title="About">
