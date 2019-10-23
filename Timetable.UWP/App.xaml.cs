@@ -54,6 +54,7 @@ namespace Timetable.UWP
 
                 Xamarin.Forms.Forms.SetFlags("Shell_UWP_Experimental", "Visual_Experimental", "CollectionView_Experimental", "FastRenderers_Experimental");
                 Xamarin.Forms.Forms.Init(e);
+                ImageCircle.Forms.Plugin.UWP.ImageCircleRenderer.Init();
 
                 if (e.PreviousExecutionState == ApplicationExecutionState.Terminated)
                 {
