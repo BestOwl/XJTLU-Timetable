@@ -32,7 +32,7 @@ namespace Timetable.Core
         [JsonIgnore]
         public string TimeStringDisplay
         {
-            get => "Time: " + StartTime.ToString("yyyy-MM-dd  HH:mm") + " - " + EndTime.ToString("HH:mm");
+            get => StartTime.ToString("yyyy-MM-dd  HH:mm") + "-" + EndTime.ToString("HH:mm");
         }
 
         public bool IsSameClass(Class obj)

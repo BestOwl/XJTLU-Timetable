@@ -1,4 +1,5 @@
-﻿using System;
+﻿using Microsoft.Exchange.WebServices.Data;
+using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
@@ -16,10 +17,19 @@ namespace Timetable
     [DesignTimeVisible(false)]
     public partial class AppShell : Shell
     {
-        public static AppShell Instance;
-
-        public AppShellViewModel ViewModel = new AppShellViewModel();
-        public XJTLUAccount Account = new XJTLUAccount();
+        public static AppShell _Instance;
+        public static AppShell Instance
+        {
+            get
+            {
+                if (_Instance == null)
+                {
+                    _Instance = new AppShell();
+                }
+                return _Instance;
+            }
+            set => _Instance = value;
+        }
 
         public AppShell()
         {
@@ -29,28 +39,19 @@ namespace Timetable
             Init();
         }
 
-        public async void Init()
+        private async void Init()
         {
-            Account.Token = await Settings.GetTokenAsync();
-            if (string.IsNullOrEmpty(Account.Token))
+            XJTLUAccount acc = App.Instance.Account;
+
+            // Check login state
+            if (!acc.IsLogined)
             {
                 await Navigation.PushModalAsync(LoginPage.Instance);
                 return;
             }
 
-            Account.Username = Settings.Username;
-            if (string.IsNullOrEmpty(Account.Username))
-            {
-                await Navigation.PushModalAsync(LoginPage.Instance);
-                return;
-            }
-
-            Account.AccountId = Settings.AccountId;
-            if (string.IsNullOrEmpty(Account.AccountId))
-            {
-                await Navigation.PushModalAsync(LoginPage.Instance);
-                return;
-            }
+            ViewModel.Username = acc.Username;
+            ClassCacheManager.Instance.SetupExchangeAccount(acc);
         }
 
         private void MenuItem_Logout_Clicked(object sender, EventArgs e)

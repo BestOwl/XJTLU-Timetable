@@ -24,6 +24,11 @@ namespace Timetable.Core
             Service.Url = new Uri("https://mail.xjtlu.edu.cn/EWS/Exchange.asmx");
         }
 
+        public void SetupExchangeAccount(XJTLUAccount account)
+        {
+            Service.Credentials = new WebCredentials(account.Username, account.Password, "xjtlu.edu.cn");
+        }
+
         public static string GetCacheFileName(string accountId, DateTime startOfWeek)
         {
             return string.Format(@"cache\{0}\timetable-{1}.json", accountId, WeekHelper.GetDateStr(startOfWeek));
@@ -60,6 +65,21 @@ namespace Timetable.Core
                     return null;
                 }
             });
+        }
+
+        public async Task<List<Class>> LoadClassListFromCache(DateTime startOfWeek, string accountId, int weekCount = 4)
+        {
+            List<Class> ret = new List<Class>();
+            DateTime start = startOfWeek;
+            for (int i = 0; i < weekCount; i++)
+            {
+                ClassCache cache = await LoadCache(start, accountId);
+                if (cache != null)
+                {
+                    ret.AddRange(cache.ClassList);
+                }
+            }
+            return ret;
         }
 
         public async Task<(bool TokenExpired, List<ClassCache> classCaches)> UpdateTimetable(string accountId, string token, int reminderIndex, int weekCount)
@@ -99,32 +119,27 @@ namespace Timetable.Core
                 }
                 else
                 {
-                    // Delete appointment from calendar
-                    //CalendarFolder calendarFolder = await CalendarFolder.Bind(Service, WellKnownFolderName.Calendar);
-                    //CalendarView calendarView = new CalendarView(cache.StartOfWeek, cache.GetEndDayOfWeek());
-                    //FindItemsResults<Appointment> items = await calendarFolder.FindAppointments(calendarView);
-                    //foreach (Class cls in cache.ClassList)
-                    //{
-                    //    foreach (Appointment apt in items)
-                    //    {
-                    //        if (Equals(cls.AppointmentId, apt.Id.UniqueId))
-                    //        {
-                    //            await apt.Delete(DeleteMode.MoveToDeletedItems);
-                    //            break;
-                    //        }
-                    //    }
-                    //}
+                    if (Service.Credentials != null)
+                    {
+                        // Delete appointment from calendar
+                        await DeleteAppointmentFromExchange(cache);
 
-                    //cache.ClassList = table;
+                        cache.ClassList = table;
+                        cache.ReminderSelectionIndex = reminderIndex;
+                    }
                 }
             }
             else
             {
                 cache = new ClassCache(startOfWeek, table,  new FileInfo(GetCacheFilePath(accountId, startOfWeek)));
+                cache.ReminderSelectionIndex = reminderIndex;
             }
 
             // Add appointment to calendar
-            //await ExportToExchangeCalendar(table, reminderIndex);
+            if (Service.Credentials != null)
+            {
+                await ExportToExchangeCalendar(table, reminderIndex);
+            }
             await cache.SaveCache();
         }
 
@@ -160,110 +175,131 @@ namespace Timetable.Core
 
         private async System.Threading.Tasks.Task ExportToExchangeCalendar(List<Class> classList, int reminderIndex)
         {
-            // TODO: Validate exsisting appointment
-            foreach (Class cls in classList)
+            try
             {
-                Appointment appointment = new Appointment(Service);
-                appointment.IsAllDayEvent = false;
-
-                appointment.Subject = cls.ModuleCode;
-                appointment.Start = cls.StartTime;
-                appointment.End = cls.EndTime;
-                appointment.Location = cls.Location;
-                appointment.Sensitivity = Sensitivity.Private;
-
-                StringBuilder builder = new StringBuilder();
-                builder.AppendLine(cls.ModuleTypeGroup);
-                builder.AppendLine(cls.StaffName);
-                builder.AppendLine(cls.ModuleType);
-                appointment.Body = new MessageBody(BodyType.Text, builder.ToString());
-
-                switch (reminderIndex)
+                // TODO: Validate exsisting appointment
+                foreach (Class cls in classList)
                 {
-                    case 0:
-                        appointment.IsReminderSet = false;
-                        break;
-                    case 1:
-                        appointment.ReminderMinutesBeforeStart = 0;
-                        break;
-                    case 2:
-                        appointment.ReminderMinutesBeforeStart = 5;
-                        break;
-                    case 3:
-                        appointment.ReminderMinutesBeforeStart = 10;
-                        break;
-                    case 4:
-                        appointment.ReminderMinutesBeforeStart = 15;
-                        break;
-                    case 5:
-                        appointment.ReminderMinutesBeforeStart = 30;
-                        break;
-                    case 6:
-                        appointment.ReminderMinutesBeforeStart = 60;
-                        break;
-                    case 7:
-                        appointment.ReminderMinutesBeforeStart = 120;
-                        break;
-                }
+                    Appointment appointment = new Appointment(Service);
+                    appointment.IsAllDayEvent = false;
 
-                // TODO: Retry after saving failed (networking issue)
-                await appointment.Save();
-                cls.AppointmentId = appointment.Id.UniqueId;
+                    appointment.Subject = cls.ModuleCode;
+                    appointment.Start = cls.StartTime;
+                    appointment.End = cls.EndTime;
+                    appointment.Location = cls.Location;
+                    appointment.Sensitivity = Sensitivity.Private;
+
+                    StringBuilder builder = new StringBuilder();
+                    builder.AppendLine(cls.ModuleTypeGroup);
+                    builder.AppendLine(cls.StaffName);
+                    builder.AppendLine(cls.ModuleType);
+                    appointment.Body = new MessageBody(BodyType.Text, builder.ToString());
+
+                    switch (reminderIndex)
+                    {
+                        case 0:
+                            appointment.IsReminderSet = false;
+                            break;
+                        case 1:
+                            appointment.ReminderMinutesBeforeStart = 0;
+                            break;
+                        case 2:
+                            appointment.ReminderMinutesBeforeStart = 5;
+                            break;
+                        case 3:
+                            appointment.ReminderMinutesBeforeStart = 10;
+                            break;
+                        case 4:
+                            appointment.ReminderMinutesBeforeStart = 15;
+                            break;
+                        case 5:
+                            appointment.ReminderMinutesBeforeStart = 30;
+                            break;
+                        case 6:
+                            appointment.ReminderMinutesBeforeStart = 60;
+                            break;
+                        case 7:
+                            appointment.ReminderMinutesBeforeStart = 120;
+                            break;
+                    }
+
+                    // TODO: Retry after saving failed (networking issue)
+                    await appointment.Save();
+                    cls.AppointmentId = appointment.Id.UniqueId;
+                }
             }
+            catch (ServiceRequestException) { }
+        }
+
+        private async System.Threading.Tasks.Task DeleteAppointmentFromExchange(ClassCache oldCache)
+        {
+            try
+            {
+                // Delete appointment from calendar
+                CalendarFolder calendarFolder = await CalendarFolder.Bind(Service, WellKnownFolderName.Calendar);
+                CalendarView calendarView = new CalendarView(oldCache.StartOfWeek, oldCache.GetEndDayOfWeek());
+                FindItemsResults<Appointment> items = await calendarFolder.FindAppointments(calendarView);
+                foreach (Class cls in oldCache.ClassList)
+                {
+                    foreach (Appointment apt in items)
+                    {
+                        if (Equals(cls.AppointmentId, apt.Id.UniqueId))
+                        {
+                            await apt.Delete(DeleteMode.MoveToDeletedItems);
+                            break;
+                        }
+                    }
+                }
+            }
+            catch (ServiceRequestException) { }
         }
 
         // To meet the Microsoft Store submission requirement.
         public static ClassCache LoadTestCache()
         {
             ClassCache ret = new ClassCache(WeekHelper.GetStartDayOfWeek(), new List<Class>(), new FileInfo("test.json"));
+            DateTime baseTime = WeekHelper.GetStartDayOfWeek().AddDays(WeekHelper.Interval_StartOfNextWeek).AddHours(9);
             ret.ClassList.Add(new Class
             {
                 ModuleCode = "EAP021",
                 Location = "Foundation Building-FB321",
-                StartTime = new DateTime(2019, 09, 02, 09, 00, 00),
-                EndTime = new DateTime(2019, 09, 09, 11, 00, 00)
-            });
-            ret.ClassList.Add(new Class
-            {
-                ModuleCode = "CCT007",
-                Location = "Science Building Block-SB101",
-                StartTime = new DateTime(2019, 09, 02, 15, 00, 00),
-                EndTime = new DateTime(2019, 09, 02, 17, 00, 00)
+                StartTime = baseTime,
+                EndTime = baseTime.AddHours(2)
             });
             ret.ClassList.Add(new Class
             {
                 ModuleCode = "MTH013",
                 Location = "Science Building Block B-SB222",
-                StartTime = new DateTime(2019, 09, 03, 15, 00, 00),
-                EndTime = new DateTime(2019, 09, 03, 17, 00, 00)
+                StartTime = baseTime.AddDays(1).AddHours(6),
+                EndTime = baseTime.AddDays(1).AddHours(8)
             });
             ret.ClassList.Add(new Class
             {
                 ModuleCode = "CSE001",
                 Location = "Science Building Block A-SA101",
-                StartTime = new DateTime(2019, 09, 04, 11, 00, 00),
-                EndTime = new DateTime(2019, 09, 04, 13, 00, 00)
+                StartTime = baseTime.AddDays(2).AddHours(2),
+                EndTime = baseTime.AddDays(2).AddHours(4)
             });
             ret.ClassList.Add(new Class
             {
                 ModuleCode = "EAP021",
                 Location = "Foundation Building-FB321",
-                StartTime = new DateTime(2019, 09, 05, 11, 00, 00),
-                EndTime = new DateTime(2019, 09, 05, 13, 00, 00)
+                StartTime = baseTime.AddDays(3).AddHours(2),
+                EndTime = baseTime.AddDays(3).AddHours(4)
             });
             ret.ClassList.Add(new Class
             {
                 ModuleCode = "MTH013",
                 Location = "Science Building Block B-SB222",
-                StartTime = new DateTime(2019, 09, 05, 15, 00, 00),
-                EndTime = new DateTime(2019, 09, 05, 17, 00, 00)
+                StartTime = baseTime.AddDays(3).AddHours(6),
+                EndTime = baseTime.AddDays(3).AddHours(8)
             });
             ret.ClassList.Add(new Class
             {
                 ModuleCode = "MTH007",
                 Location = "Science Building Block D-SD325",
-                StartTime = new DateTime(2019, 09, 06, 11, 00, 00),
-                EndTime = new DateTime(2019, 09, 06, 13, 00, 00)
+                StartTime = baseTime.AddDays(4).AddHours(2),
+                EndTime = baseTime.AddDays(4).AddHours(4)
             });
             return ret;
         }

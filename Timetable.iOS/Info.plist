@@ -34,5 +34,7 @@
     <string>Timetable</string>
     <key>XSAppIconAssets</key>
     <string>Assets.xcassets/AppIcon.appiconset</string>
+    <key>UIAppFonts</key>
+    <string>winjs-symbols.ttf</string>
 </dict>
 </plist>

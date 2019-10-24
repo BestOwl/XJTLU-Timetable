@@ -6,6 +6,10 @@
              mc:Ignorable="d"
              x:Class="Timetable.App">
     <Application.Resources>
-
+        <OnPlatform x:Key="MDL2Symbols" x:TypeArguments="x:String">
+            <On Platform="iOS" Value="Symbols" />
+            <On Platform="Android" Value="winjs-symbols.ttf#Symbols" />
+            <On Platform="UWP" Value="Assets/winjs-symbols.ttf#Symbols" />
+        </OnPlatform>
     </Application.Resources>
 </Application>

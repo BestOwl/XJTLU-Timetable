@@ -22,10 +22,16 @@ namespace Timetable.Core
         public string Token;
         [JsonIgnore]
         public string AccountId;
-
+        [JsonIgnore]
         public bool IsLogined
         {
-            get => string.IsNullOrEmpty(Token);
+            get 
+            {
+                return !string.IsNullOrEmpty(Token) &&
+                    !string.IsNullOrEmpty(Username) &&
+                    !string.IsNullOrEmpty(Password) &&
+                    !string.IsNullOrEmpty(AccountId);
+            }
         }
 
         // In order to meet the Microsoft Store tester requirement
@@ -53,6 +59,13 @@ namespace Timetable.Core
             if (string.IsNullOrEmpty(Password))
             {
                 result.Result = LoginResult.ResultType.NoUserPass;
+                return result;
+            }
+            if (IsTestAccount())
+            {
+                result.Result = LoginResult.ResultType.Success;
+                Token = "test";
+                AccountId = "test";
                 return result;
             }
 
@@ -92,6 +105,14 @@ namespace Timetable.Core
                 result.Result = LoginResult.ResultType.Unkonwn;
                 return result;
             }
+        }
+
+        public void Logout()
+        {
+            Username = string.Empty;
+            Password = string.Empty;
+            Token = string.Empty;
+            AccountId = string.Empty;
         }
     }
 

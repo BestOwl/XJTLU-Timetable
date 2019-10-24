@@ -39,14 +39,19 @@ namespace Timetable
             set => Preferences.Set("reminder-index", value);
         }
 
-        public static async Task<string> GetPassword()
+        public static async Task<string> GetPasswordAsync()
         {
             return await SecureStorage.GetAsync("password");
         }
 
-        public static async Task SetPassword(string password)
+        public static async Task SetPasswordAsync(string password)
         {
             await SecureStorage.SetAsync("password", password);
+        }
+
+        public static void ClearPassword()
+        {
+            SecureStorage.Remove("password");
         }
 
         public static async Task<string> GetTokenAsync()
@@ -69,6 +74,7 @@ namespace Timetable
             await SetToken(acc.Token);
             Username = acc.Username;
             AccountId = acc.AccountId;
+            await SetPasswordAsync(acc.Password);
         }
     }
 }

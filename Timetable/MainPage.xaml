@@ -8,7 +8,7 @@
              mc:Ignorable="d"
              x:Class="Timetable.MainPage">
     <ContentPage.Content>
-        <StackLayout Spacing="10" Margin="10" HorizontalOptions="Start" >
+        <StackLayout Spacing="10" Margin="10" >
             <StackLayout.BindingContext>
                 <vm:MainPageViewModel x:Name="ViewModel" />
             </StackLayout.BindingContext>
@@ -18,15 +18,44 @@
             <ListView ItemsSource="{Binding ClassList, Mode=OneWay}" 
                       IsPullToRefreshEnabled="True"
                       IsRefreshing="{Binding IsRefreshing, Mode=OneWay}"
-                      Refreshing="ListView_Refreshing">
+                      Refreshing="ListView_Refreshing"
+                      SeparatorVisibility="None"
+                      RowHeight="100">
                 <ListView.ItemTemplate>
                     <DataTemplate x:DataType="model:Class">
                         <ViewCell>
-                            <StackLayout Padding="5" >
-                                <Label Text="{Binding ModuleCode}" Style="{DynamicResource ListItemTextStyle}"/>
-                                <Label Text="{Binding Location}" Style="{DynamicResource ListItemDetailTextStyle}" />
-                                <Label Text="{Binding TimeStringDisplay}" Style="{DynamicResource ListItemDetailTextStyle}" />
-                            </StackLayout>
+                            <ContentView Padding="5">
+                                <Frame Padding="10">
+                                    <StackLayout >
+                                        <StackLayout Orientation="Horizontal">
+                                            <Image>
+                                                <Image.Source>
+                                                    <FontImageSource Glyph="&#xE1A2;" Color="Black" FontFamily="{DynamicResource MDL2Symbols}" Size="16" />
+                                                </Image.Source>
+                                            </Image>
+                                            <Label Text="{Binding ModuleCode}" FontSize="16" FontAttributes="Bold"/>
+                                        </StackLayout>
+
+                                        <StackLayout Orientation="Horizontal">
+                                            <Image>
+                                                <Image.Source>
+                                                    <FontImageSource Glyph="&#xE129;" Color="Black" FontFamily="{DynamicResource MDL2Symbols}" Size="16" />
+                                                </Image.Source>
+                                            </Image>
+                                            <Label Text="{Binding Location}" FontSize="16"/>
+                                        </StackLayout>
+
+                                        <StackLayout Orientation="Horizontal">
+                                            <Image>
+                                                <Image.Source>
+                                                    <FontImageSource Glyph="&#xE121;" Color="Black" FontFamily="{DynamicResource MDL2Symbols}" Size="16" />
+                                                </Image.Source>
+                                            </Image>
+                                            <Label Text="{Binding TimeStringDisplay}" FontSize="16" />
+                                        </StackLayout>
+                                    </StackLayout>
+                                </Frame>
+                            </ContentView>
                         </ViewCell>
                     </DataTemplate>
                 </ListView.ItemTemplate>

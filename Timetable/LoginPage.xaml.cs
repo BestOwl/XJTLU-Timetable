@@ -41,7 +41,7 @@ namespace Timetable
 
         public async void Button_Login_Clicked(object sender, EventArgs args)
         {
-            XJTLUAccount acc = AppShell.Instance.Account;
+            XJTLUAccount acc = App.Instance.Account;
 
             acc.Username = ViewModel.Username;
             acc.Password = ViewModel.Password;
@@ -51,11 +51,17 @@ namespace Timetable
             {
                 await AppShell.Instance.Navigation.PopModalAsync();
                 Settings.SaveAccount(acc);
+                ClassCacheManager.Instance.SetupExchangeAccount(acc);
             }
             else
             {
                 await DisplayAlert("Login Failed", result.ResultDescription, "Ok");
             }
+        }
+
+        protected override bool OnBackButtonPressed()
+        {
+            return true; //Ignore back button 
         }
     }
 }

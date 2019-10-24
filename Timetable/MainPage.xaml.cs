@@ -19,26 +19,49 @@ namespace Timetable
         {
             InitializeComponent();
             Instance = this;
-
-            LoadPreview();
         }
 
-        private async void LoadPreview()
+        protected async override void OnAppearing()
+        {
+            base.OnAppearing();
+            if (ViewModel.ClassList.Count == 0 && App.Instance.Account.IsLogined)
+            {
+                await LoadPreview();
+            }
+        }
+
+        private async Task LoadPreview()
         {
             // Load preview from local cache
-            ClassCache cache = await ClassCacheManager.Instance.LoadCache(WeekHelper.GetStartDayOfWeek(), 
-                AppShell.Instance.Account.AccountId);
-            if (cache != null)
+            List<Class> classList;
+            if (App.Instance.Account.IsTestAccount())
             {
-                DisplayClassList(cache.ClassList);
+                classList = ClassCacheManager.LoadTestCache().ClassList;
             }
+            else
+            {
+                classList = await ClassCacheManager.Instance.LoadClassListFromCache(WeekHelper.GetStartDayOfWeek(),
+                App.Instance.Account.AccountId);
+            }
+                
 
-            await Update();
+            if (classList.Count > 0)
+            {
+                DisplayClassList(classList);
+            }
+            else
+            {
+                await Update();
+            }
         }
 
         private async Task Update()
         {
-            XJTLUAccount acc = AppShell.Instance.Account;
+            XJTLUAccount acc = App.Instance.Account;
+            if (acc.IsTestAccount())
+            {
+                return;
+            }
             var result = await ClassCacheManager.Instance.UpdateTimetable(acc.AccountId, acc.Token, Settings.ReminderIndex, 4);
             if (result.TokenExpired)
             {
@@ -72,13 +95,22 @@ namespace Timetable
         public async void Logout()
         {
             ViewModel.ClassList.Clear();
+            App.Instance.Account.Logout();
+            Settings.AccountId = string.Empty;
+            Settings.Username = string.Empty;
             Settings.ClearToken();
+            Settings.ClearPassword();
             await AppShell.Instance.Navigation.PushModalAsync(LoginPage.Instance);
         }
 
         private async void ListView_Refreshing(object sender, EventArgs e)
         {
-            await Update();
+            ViewModel.IsRefreshing = true;
+            if (!App.Instance.Account.IsTestAccount())
+            {
+                await Update();
+            }
+            ViewModel.IsRefreshing = false;
         }
     }
 }

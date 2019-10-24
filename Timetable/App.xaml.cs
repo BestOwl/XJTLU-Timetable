@@ -1,4 +1,6 @@
 ﻿using System;
+using System.Threading.Tasks;
+using Timetable.Core;
 using Xamarin.Forms;
 using Xamarin.Forms.Xaml;
 
@@ -6,16 +8,24 @@ namespace Timetable
 {
     public partial class App : Application
     {
+        public static App Instance;
+        public XJTLUAccount Account = new XJTLUAccount();
+
         public App()
         {
             InitializeComponent();
-
-            MainPage = new AppShell();
+            Instance = this;
         }
 
-        protected override void OnStart()
+        protected override async void OnStart()
         {
             // Handle when your app starts
+            Account.Token = await Settings.GetTokenAsync();
+            Account.Password = await Settings.GetPasswordAsync();
+            Account.Username = Settings.Username;
+            Account.AccountId = Settings.AccountId;
+
+            MainPage = AppShell.Instance;
         }
 
         protected override void OnSleep()
