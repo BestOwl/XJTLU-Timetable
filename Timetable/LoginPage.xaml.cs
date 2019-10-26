@@ -49,9 +49,14 @@ namespace Timetable
             LoginResult result = await acc.Login();
             if (result.Result == LoginResult.ResultType.Success)
             {
-                await AppShell.Instance.Navigation.PopModalAsync();
                 Settings.SaveAccount(acc);
                 ClassCacheManager.Instance.SetupExchangeAccount(acc);
+                MainPage.Instance._Loading = true;
+                Task loadTask = MainPage.Instance.LoadPreview();
+                await AppShell.Instance.Navigation.PopModalAsync();
+                await loadTask;
+                MainPage.Instance._Loading = false;
+
             }
             else
             {

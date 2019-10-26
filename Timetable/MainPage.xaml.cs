@@ -15,6 +15,8 @@ namespace Timetable
     {
         public static MainPage Instance;
 
+        public bool _Loading;
+
         public MainPage()
         {
             InitializeComponent();
@@ -24,13 +26,17 @@ namespace Timetable
         protected async override void OnAppearing()
         {
             base.OnAppearing();
+            if (_Loading)
+            {
+                return;
+            }
             if (ViewModel.ClassList.Count == 0 && App.Instance.Account.IsLogined)
             {
                 await LoadPreview();
             }
         }
 
-        private async Task LoadPreview()
+        public async Task LoadPreview()
         {
             // Load preview from local cache
             List<Class> classList;

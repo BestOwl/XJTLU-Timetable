@@ -98,7 +98,7 @@ namespace Timetable.Core
                 ClassCache cache = await LoadCache(startOfWeek, accountId);
                 if (result.Classes != null)
                 {
-                    await UpdateTimetableInternal(result.Classes, cache, startOfWeek, accountId, reminderIndex);
+                    cache = await UpdateTimetableInternal(result.Classes, cache, startOfWeek, accountId, reminderIndex);
                 }
                 caches.Add(cache);
 
@@ -109,38 +109,47 @@ namespace Timetable.Core
             return (false, caches);
         }
 
-        private async System.Threading.Tasks.Task UpdateTimetableInternal(List<Class> table, ClassCache cache, DateTime startOfWeek, string accountId, int reminderIndex)
+        /// <summary>
+        /// Compare provided class list and local cache to determin which one has the latest class list, then update to calendar.
+        /// </summary>
+        /// <param name="table">Provided class list</param>
+        /// <param name="cache">Local cache</param>
+        /// <param name="startOfWeek">Start date of the week</param>
+        /// <param name="accountId">XJTLU Account Portal Internal ID</param>
+        /// <param name="reminderIndex">Seleted reminder index</param>
+        /// <returns>The updated cache with latest class list</returns>
+        private async Task<ClassCache> UpdateTimetableInternal(List<Class> table, ClassCache cache, DateTime startOfWeek, string accountId, int reminderIndex)
         {
-            if (cache != null)
-            {
-                if (cache.IsLatestCache(table, reminderIndex))
-                {
-                    return;
-                }
-                else
-                {
-                    if (Service.Credentials != null)
-                    {
-                        // Delete appointment from calendar
-                        await DeleteAppointmentFromExchange(cache);
+            ClassCache ret = cache;
+            bool flag = false; // need to update
 
-                        cache.ClassList = table;
-                        cache.ReminderSelectionIndex = reminderIndex;
-                    }
+            if (ret != null)
+            {
+                if (!ret.IsLatestCache(table, reminderIndex))
+                {
+                    flag = true;
+                    // Delete appointment from calendar
+                    //await DeleteAppointmentFromExchange(cache);
+
+                    ret.ClassList = table;
+                    ret.ReminderSelectionIndex = reminderIndex;
                 }
             }
             else
             {
-                cache = new ClassCache(startOfWeek, table,  new FileInfo(GetCacheFilePath(accountId, startOfWeek)));
-                cache.ReminderSelectionIndex = reminderIndex;
+                flag = true;
+                ret = new ClassCache(startOfWeek, table,  new FileInfo(GetCacheFilePath(accountId, startOfWeek)));
+                ret.ReminderSelectionIndex = reminderIndex;
             }
 
             // Add appointment to calendar
-            if (Service.Credentials != null)
+            if (flag)
             {
-                await ExportToExchangeCalendar(table, reminderIndex);
+                //await ExportToExchangeCalendar(table, reminderIndex);
+                await ret.SaveCache();
             }
-            await cache.SaveCache();
+
+            return ret;
         }
 
         private async Task<(bool TokenExpired, List<Class> Classes)> GetTimetable(DateTime from, DateTime to, string accountId, string token)
