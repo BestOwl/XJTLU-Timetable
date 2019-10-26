@@ -25,7 +25,7 @@ namespace Timetable
                 index = (int) Reminders.Before15Minutes;
                 Settings.ReminderIndex = index;
             }
-            ViewModel.ReminderIndex = (Reminders) index;
+            ViewModel.ReminderIndex = index;
         }
     }
 }

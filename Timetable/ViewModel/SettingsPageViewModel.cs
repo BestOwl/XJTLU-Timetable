@@ -11,21 +11,33 @@ namespace Timetable.ViewModel
         public bool BackgroundUpdate
         {
             get => _BackgroundUpdate;
-            set => SetProperty(ref _BackgroundUpdate, value);
+            set
+            {
+                SetProperty(ref _BackgroundUpdate, value);
+                Settings.UpdateToExchange = value;
+            }
         }
 
         private bool _UpdateToExchange;
         public bool UpdateToExchange
         {
             get => _UpdateToExchange;
-            set => SetProperty(ref _UpdateToExchange, value);
+            set 
+            {
+                SetProperty(ref _UpdateToExchange, value);
+                Settings.UpdateToExchange = value;
+            } 
         }
 
-        private Reminders _ReminderIndex;
-        public Reminders ReminderIndex
+        private int _ReminderIndex;
+        public int ReminderIndex
         {
             get => _ReminderIndex;
-            set => SetProperty(ref _ReminderIndex, value);
+            set 
+            {
+                SetProperty(ref _ReminderIndex, value);
+                Settings.ReminderIndex = value;
+            } 
         }
     }
 }
