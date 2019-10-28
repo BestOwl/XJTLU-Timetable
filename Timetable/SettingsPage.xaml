@@ -5,23 +5,23 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:vm="clr-namespace:Timetable.ViewModel"
              mc:Ignorable="d"
-             x:Class="Timetable.SettingsPage">
+             x:Class="Timetable.SettingsPage"
+             Title="Calendar settings">
     <ContentPage.Content>
         <StackLayout  Margin="10" HorizontalOptions="Start" WidthRequest="400">
             <StackLayout.BindingContext>
                 <vm:SettingsPageViewModel x:Name="ViewModel" />
             </StackLayout.BindingContext>
-            
-            <Label Text="Calendar settings" FontSize="Medium" Margin="0,0,0,10"/>
 
             <Label Text="Auto update calendar in background" />
-            <Switch IsToggled="{Binding BackgroundUpdate, Mode=TwoWay}" Margin="0,0,0,10" />
+            <Switch IsToggled="{Binding BackgroundUpdate, Mode=TwoWay}" Margin="0,0,0,10" HorizontalOptions="Start"/>
 
             <Label Text="Update to Exchange calendar" />
-            <Switch IsToggled="{Binding UpdateToExchange, Mode=TwoWay}" Margin="0,0,0,10" />
+            <Switch IsToggled="{Binding UpdateToExchange, Mode=TwoWay}" Margin="0,0,0,10" HorizontalOptions="Start"/>
 
-            <Picker Title="Remind me before class begin"
-                SelectedIndex="{Binding ReminderIndex, Mode=TwoWay}">
+            <Label Text="Reminder" />
+            <Label Text="Remind me before class begin" />
+            <Picker SelectedIndex="{Binding ReminderIndex, Mode=TwoWay}">
                 <Picker.Items>
                     <x:String>Never</x:String>
                     <x:String>0 minute before</x:String>
@@ -30,9 +30,11 @@
                     <x:String>15 minutes before</x:String>
                     <x:String>30minutes before</x:String>
                     <x:String>1 hour before</x:String>
-                    <x:String>2hours before</x:String>
+                    <x:String>2 hours before</x:String>
                 </Picker.Items>
             </Picker>
+            <Label Text="Changes will only be made after next update" />
+            <Label Text="Pull down on Upcoming classes page can mannully update" />
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>

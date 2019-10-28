@@ -6,14 +6,13 @@
              xmlns:vm="clr-namespace:Timetable.ViewModel"
              xmlns:model="clr-namespace:Timetable.Core;assembly=Timetable.Core"
              mc:Ignorable="d"
-             x:Class="Timetable.MainPage">
+             x:Class="Timetable.MainPage"
+             Title="Upcoming classes">
     <ContentPage.Content>
         <StackLayout Spacing="10" Margin="10" >
             <StackLayout.BindingContext>
                 <vm:MainPageViewModel x:Name="ViewModel" />
             </StackLayout.BindingContext>
-
-            <Label Text="Upcoming classes" FontSize="Medium"/>
 
             <ListView ItemsSource="{Binding ClassList, Mode=OneWay}" 
                       IsPullToRefreshEnabled="True"
