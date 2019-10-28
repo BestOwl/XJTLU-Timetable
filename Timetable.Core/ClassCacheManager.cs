@@ -16,6 +16,8 @@ namespace Timetable.Core
         public ExchangeService Service;
         public bool IsTestAccount = false;
 
+        private const int _DefaultWeekCount = 3;
+
         public static ClassCacheManager Instance = new ClassCacheManager();
 
         public ClassCacheManager()
@@ -67,7 +69,7 @@ namespace Timetable.Core
             });
         }
 
-        public async Task<List<Class>> LoadClassListFromCache(DateTime startOfWeek, string accountId, int weekCount = 4)
+        public async Task<List<Class>> LoadClassListFromCache(DateTime startOfWeek, string accountId, int weekCount = _DefaultWeekCount)
         {
             List<Class> ret = new List<Class>();
             DateTime start = startOfWeek;
@@ -82,7 +84,7 @@ namespace Timetable.Core
             return ret;
         }
 
-        public async Task<(bool TokenExpired, List<ClassCache> classCaches)> UpdateTimetable(string accountId, string token, int reminderIndex, int weekCount)
+        public async Task<(bool TokenExpired, List<ClassCache> classCaches)> UpdateTimetable(string accountId, string token, int reminderIndex, int weekCount = _DefaultWeekCount)
         {
             DateTime startOfWeek = WeekHelper.GetStartDayOfWeek();
             DateTime endOfWeek = startOfWeek.AddDays(WeekHelper.Interval_EndOfWeek);
@@ -128,8 +130,6 @@ namespace Timetable.Core
                 if (!ret.IsLatestCache(table, reminderIndex))
                 {
                     flag = true;
-                    // Delete appointment from calendar
-                    //await DeleteAppointmentFromExchange(cache);
 
                     ret.ClassList = table;
                     ret.ReminderSelectionIndex = reminderIndex;
@@ -145,7 +145,7 @@ namespace Timetable.Core
             // Add appointment to calendar
             if (flag)
             {
-                //await ExportToExchangeCalendar(table, reminderIndex);
+                await ExportToExchangeCalendar(table, reminderIndex);
                 await ret.SaveCache();
             }
 
@@ -184,11 +184,72 @@ namespace Timetable.Core
 
         private async System.Threading.Tasks.Task ExportToExchangeCalendar(List<Class> classList, int reminderIndex)
         {
-            try
+            CalendarFolder calendarFolder = null;
+            for (int i = 0; i < 3; i++)
             {
-                // TODO: Validate exsisting appointment
-                foreach (Class cls in classList)
+                if (calendarFolder != null)
                 {
+                    break;
+                }
+                try
+                {
+                    calendarFolder = await CalendarFolder.Bind(Service, WellKnownFolderName.Calendar);
+                }
+                catch (ServiceRequestException) { }
+
+                await System.Threading.Tasks.Task.Delay(50);
+            }
+
+            int attempts = 0;
+            CalendarView calendarView = null;
+            for (int i = 0; i < classList.Count;)
+            {
+                if (attempts >= 3) // give up after 3 times failure
+                {
+#if DEBUG
+                    System.Console.WriteLine("DEBUG - Too many add attempts failed");
+#endif
+                    attempts = 0;
+                    i++;
+                    continue;
+                }
+
+                Class cls = classList[i];
+                try
+                {
+                    // Validating exsisting appointment
+                    if (!string.IsNullOrEmpty(cls.AppointmentId))
+                    {
+                        bool isExist = false;
+                        calendarView = new CalendarView(cls.StartTime, cls.EndTime);
+                        FindItemsResults<Appointment> results = await calendarFolder.FindAppointments(calendarView);
+                        foreach (Appointment appoint in results)
+                        {
+                            if (string.Equals(cls.ModuleCode, appoint.Subject))
+                            {
+                                // TODO: Validate location and details info
+#if DEBUG
+                                System.Console.WriteLine("DEBUG - Skiping existing appointment {0}", cls.ModuleCode);
+#endif
+                                int minutes = GetReminderMinutes(reminderIndex);
+                                if (minutes != appoint.ReminderMinutesBeforeStart)
+                                {
+                                    appoint.ReminderMinutesBeforeStart = minutes;
+                                    await appoint.Update(ConflictResolutionMode.AlwaysOverwrite, SendInvitationsOrCancellationsMode.SendToNone);
+                                }
+
+                                cls.AppointmentId = appoint.Id.UniqueId;
+                                break;
+                            }
+                        }
+
+                        if (isExist)
+                        {
+                            i++;
+                            continue;
+                        }
+                    }
+
                     Appointment appointment = new Appointment(Service);
                     appointment.IsAllDayEvent = false;
 
@@ -204,63 +265,112 @@ namespace Timetable.Core
                     builder.AppendLine(cls.ModuleType);
                     appointment.Body = new MessageBody(BodyType.Text, builder.ToString());
 
-                    switch (reminderIndex)
-                    {
-                        case 0:
-                            appointment.IsReminderSet = false;
-                            break;
-                        case 1:
-                            appointment.ReminderMinutesBeforeStart = 0;
-                            break;
-                        case 2:
-                            appointment.ReminderMinutesBeforeStart = 5;
-                            break;
-                        case 3:
-                            appointment.ReminderMinutesBeforeStart = 10;
-                            break;
-                        case 4:
-                            appointment.ReminderMinutesBeforeStart = 15;
-                            break;
-                        case 5:
-                            appointment.ReminderMinutesBeforeStart = 30;
-                            break;
-                        case 6:
-                            appointment.ReminderMinutesBeforeStart = 60;
-                            break;
-                        case 7:
-                            appointment.ReminderMinutesBeforeStart = 120;
-                            break;
-                    }
+                    appointment.ReminderMinutesBeforeStart = GetReminderMinutes(reminderIndex);
 
-                    // TODO: Retry after saving failed (networking issue)
                     await appointment.Save();
                     cls.AppointmentId = appointment.Id.UniqueId;
+
+                    i++;
+                    attempts = 0;
+#if DEBUG
+                    System.Console.WriteLine("DEBUG - Added appointment {0}", cls.ModuleCode);
+#endif
                 }
+                catch (ServiceRequestException) 
+                {
+                    attempts++;
+#if DEBUG
+                    System.Console.WriteLine("DEBUG - Add appointment failed, attempt: ", attempts);
+#endif
+                }
+
+                await System.Threading.Tasks.Task.Delay(50); // Avoid timeout execption (Adding appointment too fast)
             }
-            catch (ServiceRequestException) { }
         }
 
+        private int GetReminderMinutes(int reminderIndex)
+        {
+            switch (reminderIndex)
+            {
+                case 0:
+                    return -1; //none
+                case 1:
+                    return 0;
+                case 2:
+                    return 5;
+                case 3:
+                    return 10;
+                case 4:
+                    return 15;
+                case 5:
+                    return 30;
+                case 6:
+                    return 60;
+                case 7:
+                    return 120;
+            }
+            return 15;
+        }
+
+        [Obsolete]
         private async System.Threading.Tasks.Task DeleteAppointmentFromExchange(ClassCache oldCache)
         {
-            try
+            CalendarFolder calendarFolder = null;
+            for (int i = 0; i < 3; i++)
             {
-                // Delete appointment from calendar
-                CalendarFolder calendarFolder = await CalendarFolder.Bind(Service, WellKnownFolderName.Calendar);
-                CalendarView calendarView = new CalendarView(oldCache.StartOfWeek, oldCache.GetEndDayOfWeek());
-                FindItemsResults<Appointment> items = await calendarFolder.FindAppointments(calendarView);
-                foreach (Class cls in oldCache.ClassList)
+                if (calendarFolder != null)
                 {
-                    foreach (Appointment apt in items)
-                    {
-                        if (Equals(cls.AppointmentId, apt.Id.UniqueId))
-                        {
-                            await apt.Delete(DeleteMode.MoveToDeletedItems);
-                            break;
-                        }
-                    }
+                    break;
                 }
+                try
+                {
+                    calendarFolder = await CalendarFolder.Bind(Service, WellKnownFolderName.Calendar);
+                }
+                catch (ServiceRequestException) { }
+
+                await System.Threading.Tasks.Task.Delay(50);
             }
-            catch (ServiceRequestException) { }
+
+            int attempt = 0;
+
+            // Delete appointment from calendar
+            CalendarView calendarView = new CalendarView(oldCache.StartOfWeek, oldCache.GetEndDayOfWeek());
+
+            for (int i = 0; i < oldCache.ClassList.Count;)
+            {
+                if (attempt >= 3)
+                {
+#if DEBUG
+                    System.Console.WriteLine("DEBUG - Too many delete attempts failed");
+#endif
+                    attempt = 0;
+                    i++;
+                    continue;
+                }
+
+                try
+                {
+                    Class cls = oldCache.ClassList[i];
+                    Appointment appoint = await Appointment.Bind(Service, cls.AppointmentId);
+                    appoint?.Delete(DeleteMode.SoftDelete);
+
+                    attempt = 0;
+                    i++;
+#if DEBUG
+                    System.Console.WriteLine("DEBUG - Deleted appointment {0}", cls.ModuleCode);
+#endif
+                }
+                catch (ServiceRequestException)
+                {
+                    attempt++;
+#if DEBUG
+                    System.Console.WriteLine("DEBUG - Delete failed, attempt: ", attempt);
+#endif
+                }
+
+                await System.Threading.Tasks.Task.Delay(50); // Avoid timeout execption
+            }
+
         }
 
         // To meet the Microsoft Store submission requirement.

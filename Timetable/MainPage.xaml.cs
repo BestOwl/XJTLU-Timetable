@@ -68,7 +68,7 @@ namespace Timetable
             {
                 return;
             }
-            var result = await ClassCacheManager.Instance.UpdateTimetable(acc.AccountId, acc.Token, Settings.ReminderIndex, 4);
+            var result = await ClassCacheManager.Instance.UpdateTimetable(acc.AccountId, acc.Token, Settings.ReminderIndex);
             if (result.TokenExpired)
             {
                 Logout();
@@ -111,12 +111,18 @@ namespace Timetable
 
         private async void ListView_Refreshing(object sender, EventArgs e)
         {
+#if DEBUG
+            System.Console.WriteLine("DEBUG - Refreshing");
+#endif
             ViewModel.IsRefreshing = true;
             if (!App.Instance.Account.IsTestAccount())
             {
                 await Update();
             }
             ViewModel.IsRefreshing = false;
+#if DEBUG
+            System.Console.WriteLine("Finished refreshing");
+#endif
         }
     }
 }
