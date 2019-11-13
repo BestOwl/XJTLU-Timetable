@@ -7,7 +7,8 @@
              xmlns:vm="clr-namespace:Timetable.ViewModel"
              mc:Ignorable="d"
              x:Class="Timetable.AppShell" 
-             NavigationPage.HasBackButton="False">
+             NavigationPage.HasBackButton="False"
+             NavigationPage.HasNavigationBar="False"
     
     <Shell.BindingContext>
         <vm:AppShellViewModel x:Name="ViewModel" x:FieldModifier="public" />

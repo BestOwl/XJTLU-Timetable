@@ -6,7 +6,8 @@
              xmlns:local="clr-namespace:Timetable.ViewModel"
              mc:Ignorable="d"
              x:Class="Timetable.LoginPage"
-             NavigationPage.HasBackButton="False">
+             NavigationPage.HasBackButton="False"
+             NavigationPage.HasNavigationBar="False">
     <ContentPage.Content>
         <StackLayout HorizontalOptions="CenterAndExpand"
                      VerticalOptions="CenterAndExpand"
