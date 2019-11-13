@@ -53,7 +53,8 @@ namespace Timetable
                 ClassCacheManager.Instance.SetupExchangeAccount(acc);
                 MainPage.Instance._Loading = true;
                 Task loadTask = MainPage.Instance.LoadPreview();
-                await AppShell.Instance.Navigation.PopModalAsync();
+
+                await RootPage.Instance.Navigation.PopAsync();
                 await loadTask;
                 MainPage.Instance._Loading = false;
 

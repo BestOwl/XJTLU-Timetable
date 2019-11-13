@@ -5,7 +5,8 @@
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              xmlns:local="clr-namespace:Timetable.ViewModel"
              mc:Ignorable="d"
-             x:Class="Timetable.LoginPage">
+             x:Class="Timetable.LoginPage"
+             NavigationPage.HasBackButton="False">
     <ContentPage.Content>
         <StackLayout HorizontalOptions="CenterAndExpand"
                      VerticalOptions="CenterAndExpand"

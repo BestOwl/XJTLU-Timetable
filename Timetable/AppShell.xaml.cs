@@ -36,19 +36,7 @@ namespace Timetable
             InitializeComponent();
             Instance = this;
 
-            Init();
-        }
-
-        private async void Init()
-        {
             XJTLUAccount acc = App.Instance.Account;
-
-            // Check login state
-            if (!acc.IsLogined)
-            {
-                await Navigation.PushModalAsync(LoginPage.Instance);
-                return;
-            }
 
             ViewModel.Username = acc.Username;
             ClassCacheManager.Instance.SetupExchangeAccount(acc);
@@ -57,6 +45,11 @@ namespace Timetable
         private void MenuItem_Logout_Clicked(object sender, EventArgs e)
         {
             MainPage.Instance.Logout();
+        }
+
+        protected override bool OnBackButtonPressed()
+        {
+            return true; //Ignore back button 
         }
     }
 }

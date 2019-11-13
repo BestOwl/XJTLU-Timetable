@@ -13,14 +13,25 @@ namespace Timetable
     [XamlCompilation(XamlCompilationOptions.Compile)]
     public partial class MainPage : ContentPage
     {
-        public static MainPage Instance;
+        private static MainPage _Instance;
+        public static MainPage Instance
+        {
+            get
+            {
+                if (_Instance == null)
+                {
+                    _Instance = new MainPage();
+                }
+                return _Instance;
+            }
+            set => _Instance = value;
+        }
 
         public bool _Loading;
 
         public MainPage()
         {
             InitializeComponent();
-            Instance = this;
         }
 
         protected async override void OnAppearing()
@@ -106,7 +117,7 @@ namespace Timetable
             Settings.Username = string.Empty;
             Settings.ClearToken();
             Settings.ClearPassword();
-            await AppShell.Instance.Navigation.PushModalAsync(LoginPage.Instance);
+            await RootPage.Instance.Navigation.PushAsync(LoginPage.Instance);
         }
 
         private async void ListView_Refreshing(object sender, EventArgs e)

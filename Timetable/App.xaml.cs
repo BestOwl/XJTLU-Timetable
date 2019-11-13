@@ -25,7 +25,7 @@ namespace Timetable
             Account.Username = Settings.Username;
             Account.AccountId = Settings.AccountId;
 
-            MainPage = AppShell.Instance;
+            MainPage = new RootPage();
         }
 
         protected override void OnSleep()
