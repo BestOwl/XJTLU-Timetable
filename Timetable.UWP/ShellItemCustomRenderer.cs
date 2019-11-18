@@ -104,7 +104,7 @@ namespace Timetable.UWP
         internal void UpdateHeaderInsets()
         {
             double inset = 10;
-            if (ShellContext.IsPaneToggleButtonVisible && ActualWidth < ShellContext.CompactModeThresholdWidth)
+            if (ShellContext.IsPaneToggleButtonVisible)
                 inset += 45;
             if (Windows.Foundation.Metadata.ApiInformation.IsPropertyPresent("Controls.NavigationView", "IsBackButtonVisible"))
             {

@@ -13,7 +13,7 @@ using Xamarin.Forms.Platform.UWP;
 namespace Timetable.UWP
 {
     [Windows.UI.Xaml.Data.Bindable]
-    public class ShellCustomRenderer : Microsoft.UI.Xaml.Controls.NavigationView, IVisualElementRenderer, IAppearanceObserver, IFlyoutBehaviorObserver
+    public class ShellCustomRenderer : Microsoft.UI.Xaml.Controls.NavigationView, IVisualElementRenderer, IAppearanceObserver
     {
         internal static readonly Windows.UI.Color DefaultBackgroundColor = Windows.UI.Color.FromArgb(255, 3, 169, 244);
         internal static readonly Windows.UI.Color DefaultForegroundColor = Windows.UI.Colors.White;
@@ -24,14 +24,23 @@ namespace Timetable.UWP
 
         ShellItemCustomRenderer ItemRenderer { get; }
 
+        /*
+         * Note: DO NOT set FlyoutIsPresented
+         * Make sure FlyoutIsPresented is always false
+         * It will cause unexpected behaviour using this custom renderer
+         * since we've made the NavigationView auto expand
+         * 
+         * Problem source Line 309 in Shell.cs
+         * if (FlyoutIsPresented && FlyoutBehavior == FlyoutBehavior.Flyout)
+				SetValueFromRenderer(FlyoutIsPresentedProperty, false);
+         */
+
         public ShellCustomRenderer()
         {
             Xamarin.Forms.Shell.VerifyShellUWPFlagEnabled(nameof(ShellRenderer));
             IsBackEnabled = false;
             IsBackButtonVisible = Microsoft.UI.Xaml.Controls.NavigationViewBackButtonVisible.Collapsed;
             IsSettingsVisible = false;
-            PaneDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewPaneDisplayMode.Auto;
-            IsPaneOpen = false;
             Content = ItemRenderer = CreateShellItemRenderer();
             MenuItemTemplateSelector = CreateShellFlyoutTemplateSelector();
             if (ApiInformation.IsEventPresent("Windows.UI.Xaml.Controls.NavigationView", "PaneClosing"))
@@ -40,32 +49,9 @@ namespace Timetable.UWP
                 PaneOpening += (s, e) => OnPaneOpening();
             ItemInvoked += OnMenuItemInvoked;
 
-            SizeChanged += ShellCustomRenderer_SizeChanged;
-            CompactModeThresholdWidth = 600;
-            ExpandedModeThresholdWidth = 600;
+            CompactModeThresholdWidth = 640;
+            ExpandedModeThresholdWidth = 640;
             Resources["NavigationViewExpandedPaneBackground"] = Resources["SystemControlChromeHighAcrylicWindowMediumBrush"];
-        }
-
-        private void ShellCustomRenderer_SizeChanged(object sender, SizeChangedEventArgs e)
-        {
-            ItemRenderer.UpdateHeaderInsets();
-            if (ActualWidth >= ExpandedModeThresholdWidth)
-            {
-                Shell.FlyoutIsPresented = true;
-            }
-            UpdatePaneToggleButton();
-        }
-
-        private void UpdatePaneToggleButton()
-        {
-            if (ActualWidth >= ExpandedModeThresholdWidth)
-            {
-                IsPaneToggleButtonVisible = false;
-            }
-            else
-            {
-                IsPaneToggleButtonVisible = true;
-            }
         }
 
         protected override void OnApplyTemplate()
@@ -77,18 +63,20 @@ namespace Timetable.UWP
 
         void OnPaneOpening()
         {
-            if (Shell != null)
-                Shell.FlyoutIsPresented = true;
             UpdatePaneButtonColor(TogglePaneButton, false);
             UpdatePaneButtonColor(NavigationViewBackButton, false);
+
+            IsPaneToggleButtonVisible = false;
+            ItemRenderer.UpdateHeaderInsets();
         }
 
         void OnPaneClosed()
         {
-            if (Shell != null)
-                Shell.FlyoutIsPresented = false;
             UpdatePaneButtonColor(TogglePaneButton, true);
             UpdatePaneButtonColor(NavigationViewBackButton, true);
+
+            IsPaneToggleButtonVisible = true;
+            ItemRenderer.UpdateHeaderInsets();
         }
 
         void OnMenuItemInvoked(Microsoft.UI.Xaml.Controls.NavigationView sender, Microsoft.UI.Xaml.Controls.NavigationViewItemInvokedEventArgs args)
@@ -151,6 +139,8 @@ namespace Timetable.UWP
                 Element.PropertyChanged += OnElementPropertyChanged;
                 ItemRenderer.SetShellContext(this);
                 _elementChanged?.Invoke(this, new VisualElementChangedEventArgs(null, Element));
+
+                Element.FlyoutIsPresented = false;
             }
             else if (Element != null)
             {
@@ -176,10 +166,6 @@ namespace Timetable.UWP
             {
                 SwitchShellItem(Element.CurrentItem);
             }
-            else if (e.PropertyName == Shell.FlyoutIsPresentedProperty.PropertyName)
-            {
-                IsPaneOpen = Shell.FlyoutIsPresented;
-            }
         }
 
         protected virtual void OnElementSet(Shell shell)
@@ -188,8 +174,6 @@ namespace Timetable.UWP
             PaneCustomContent = shr;
             MenuItemsSource = IterateItems();
             SwitchShellItem(shell.CurrentItem, false);
-            IsPaneOpen = Shell.FlyoutIsPresented;
-            ((IShellController)Element).AddFlyoutBehaviorObserver(this);
             ((IShellController)shell).AddAppearanceObserver(this, shell);
         }
 
@@ -250,34 +234,6 @@ namespace Timetable.UWP
         }
 
         #endregion IAppearanceObserver
-
-        void IFlyoutBehaviorObserver.OnFlyoutBehaviorChanged(FlyoutBehavior behavior)
-        {
-            switch (behavior)
-            {
-                case FlyoutBehavior.Disabled:
-                    IsPaneToggleButtonVisible = false;
-                    IsPaneVisible = false;
-                    PaneDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewPaneDisplayMode.LeftMinimal;
-                    IsPaneOpen = false;
-                    break;
-
-                case FlyoutBehavior.Flyout:
-                    IsPaneVisible = true;
-                    //IsPaneToggleButtonVisible = true;
-                    UpdatePaneToggleButton();
-                    bool shouldOpen = Shell.FlyoutIsPresented;
-                    PaneDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewPaneDisplayMode.Auto; //This will trigger opening the flyout
-                    IsPaneOpen = shouldOpen;
-                    break;
-
-                case FlyoutBehavior.Locked:
-                    IsPaneVisible = true;
-                    IsPaneToggleButtonVisible = false;
-                    PaneDisplayMode = Microsoft.UI.Xaml.Controls.NavigationViewPaneDisplayMode.Left;
-                    break;
-            }
-        }
 
         public virtual ShellFlyoutTemplateSelector CreateShellFlyoutTemplateSelector() => new ShellFlyoutTemplateSelector();
         public virtual ShellHeaderRenderer CreateShellHeaderRenderer(Shell shell) => new ShellHeaderRenderer(shell);
