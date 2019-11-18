@@ -133,12 +133,6 @@
       <Version>5.1.1</Version>
     </PackageReference>
   </ItemGroup>
-  <ItemGroup>
-    <ProjectReference Include="..\Timetable-UWPCacheManager\Timetable-UWPCacheManager.csproj">
-      <Project>{c07ac969-5f5e-4d2f-afad-bd5183a622f9}</Project>
-      <Name>Timetable-UWPCacheManager</Name>
-    </ProjectReference>
-  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
