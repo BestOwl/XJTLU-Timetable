@@ -8,8 +8,8 @@
              mc:Ignorable="d"
              x:Class="Timetable.AppShell" 
              NavigationPage.HasBackButton="False"
-             NavigationPage.HasNavigationBar="False"
-    
+             NavigationPage.HasNavigationBar="False">
+
     <Shell.BindingContext>
         <vm:AppShellViewModel x:Name="ViewModel" x:FieldModifier="public" />
     </Shell.BindingContext>
