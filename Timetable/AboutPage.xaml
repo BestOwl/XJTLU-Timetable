@@ -4,12 +4,89 @@
              xmlns:d="http://xamarin.com/schemas/2014/forms/design"
              xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
              mc:Ignorable="d"
-             x:Class="Timetable.AboutPage">
+             x:Class="Timetable.AboutPage"
+             xmlns:vm="clr-namespace:Timetable.ViewModel"
+             xmlns:local="clr-namespace:Timetable">
+    <ContentPage.BindingContext>
+        <vm:AboutPageViewModel />
+    </ContentPage.BindingContext>
     <ContentPage.Content>
-        <StackLayout>
-            <Label Text="Welcome to Xamarin.Forms!"
-                VerticalOptions="CenterAndExpand" 
-                HorizontalOptions="CenterAndExpand" />
+        <StackLayout HorizontalOptions="Start" Spacing="5" Margin="10">
+            <Label Text="XJTLU Timetable" FontSize="20" />
+            <Label Text="{Binding VersionString}" />
+            <Label Text="Developed by NightOwl" />
+            <Label>
+                <Label.FormattedText>
+                    <FormattedString>
+                        <Span Text="Copyright © 2019 " />
+                        <local:HyperlinkSpan Text="GoodTime Studio" Url="https://github.com/GoodTimeStudio"/>
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            
+            <Label Text="This app is open source on" Margin="0,20,0,0"/>
+            <Label LineBreakMode="CharacterWrap">
+                <Label.FormattedText>
+                    <FormattedString>
+                        <local:HyperlinkSpan Text="https://github.com/BestOwl/XJTLU-Timetable" 
+                                             Url="https://github.com/BestOwl/XJTLU-Timetable" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            <Label>
+                <Label.FormattedText>
+                    <FormattedString>
+                        <local:HyperlinkSpan Text="Open source license" 
+                                             Url="https://github.com/BestOwl/XJTLU-Timetable/blob/master/LICENSE" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+
+            <Label Text="Dependencies" FontSize="20" Margin="0,20,0,0"/>
+            <Label>
+                <Label.FormattedText>
+                    <FormattedString>
+                        <local:HyperlinkSpan Text="Xamarin" Url="https://dotnet.microsoft.com/apps/xamarin" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            <Label>
+                <Label.FormattedText>
+                    <FormattedString>
+                        <local:HyperlinkSpan Text=".NETStandard EWS Managed API" 
+                                             Url="https://github.com/sherlock1982/ews-managed-api" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            <Label>
+                <Label.FormattedText>
+                    <FormattedString>
+                        <local:HyperlinkSpan Text="Json.NET" Url="https://www.newtonsoft.com/json" />
+                    </FormattedString>
+                </Label.FormattedText>
+            </Label>
+            <OnPlatform x:TypeArguments="StackLayout">
+                <On Platform="UWP">
+                    <StackLayout Spacing="5">
+                        <Label>
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <local:HyperlinkSpan Text="Windows UI Library" 
+                                                         Url="https://github.com/Microsoft/microsoft-ui-xaml" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                        <Label>
+                            <Label.FormattedText>
+                                <FormattedString>
+                                    <local:HyperlinkSpan Text="Win2D" 
+                                                         Url="https://github.com/Microsoft/Win2D" />
+                                </FormattedString>
+                            </Label.FormattedText>
+                        </Label>
+                    </StackLayout>
+                </On>
+            </OnPlatform>
         </StackLayout>
     </ContentPage.Content>
 </ContentPage>
