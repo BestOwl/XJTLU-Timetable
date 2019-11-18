@@ -3,7 +3,7 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio Version 16
 VisualStudioVersion = 16.0.29215.179
 MinimumVisualStudioVersion = 10.0.40219.1
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Timetable-UWPBackground", "Timetable-UWPBackground\Timetable-UWPBackground.csproj", "{ECE072A6-94B0-436B-A824-38356CFE34A8}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Timetable.UWPBackground", "Timetable.UWPBackground\Timetable.UWPBackground.csproj", "{ECE072A6-94B0-436B-A824-38356CFE34A8}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Timetable", "Timetable\Timetable.csproj", "{A596E59F-EA30-4BCA-B5EC-BD89AB86955F}"
 EndProject

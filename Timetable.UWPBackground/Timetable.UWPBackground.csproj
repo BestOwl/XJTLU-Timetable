@@ -7,8 +7,8 @@
     <ProjectGuid>{ECE072A6-94B0-436B-A824-38356CFE34A8}</ProjectGuid>
     <OutputType>winmdobj</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Timetable_UWPBackground</RootNamespace>
-    <AssemblyName>Timetable-UWPBackground</AssemblyName>
+    <RootNamespace>Timetable.UWPBackground</RootNamespace>
+    <AssemblyName>Timetable.UWPBackground</AssemblyName>
     <DefaultLanguage>en-US</DefaultLanguage>
     <TargetPlatformIdentifier>UAP</TargetPlatformIdentifier>
     <TargetPlatformVersion Condition=" '$(TargetPlatformVersion)' == '' ">10.0.18362.0</TargetPlatformVersion>
