@@ -5,7 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using Windows.ApplicationModel.Background;
 
-namespace Timetable_UWPBackground
+namespace Timetable.UWPBackground
 {
     public sealed class ServiceComplete : IBackgroundTask
     {

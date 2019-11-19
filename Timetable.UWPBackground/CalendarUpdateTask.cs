@@ -4,12 +4,12 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-using Timetable_UWPCacheManager;
+using Timetable.Core;
 using Windows.ApplicationModel.Background;
 using Windows.Storage;
 using Windows.UI.Notifications;
 
-namespace Timetable_UWPBackground
+namespace Timetable.UWPBackground
 {
     public sealed class CalendarUpdateTask : IBackgroundTask
     {
@@ -51,8 +51,8 @@ namespace Timetable_UWPBackground
                 return;
             }
 
-            var result = await ClassCacheManagerUWP.Instance.UpdateTimetable(id, token, reminderIndex);
-            if (result.success)
+            var result = await ClassCacheManager.Instance.UpdateTimetable(id, token, reminderIndex);
+            if (!result.TokenExpired)
             {
                 ToastContent toastContent = new ToastContent()
                 {

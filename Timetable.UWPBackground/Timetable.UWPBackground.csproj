@@ -133,6 +133,12 @@
       <Version>5.1.1</Version>
     </PackageReference>
   </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Timetable.Core\Timetable.Core.csproj">
+      <Project>{c9d54415-ac61-46c5-a41f-b41b996cbae2}</Project>
+      <Name>Timetable.Core</Name>
+    </ProjectReference>
+  </ItemGroup>
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
