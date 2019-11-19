@@ -9,7 +9,7 @@
   <Identity
     Name="11602GoodTimeStudio.XJTLUTimetable"
     Publisher="CN=26FBF7DF-0382-4C02-8985-D8DE01CEF4A3"
-    Version="2.0.8.0" />
+    Version="2.0.9.0" />
 
   <mp:PhoneIdentity PhoneProductId="b908a764-ad0d-4e4c-9add-00bc5aa7dff0" PhonePublisherId="00000000-0000-0000-0000-000000000000"/>
 
@@ -46,6 +46,14 @@
         </uap:DefaultTile>
         <uap:SplashScreen Image="Assets\SplashScreen.png" />
       </uap:VisualElements>
+      <Extensions>
+        <Extension Category="windows.backgroundTasks" EntryPoint="Timetable.UWPBackground.CalendarUpdateTask">
+          <BackgroundTasks>
+            <Task Type="timer"/>
+          </BackgroundTasks>
+        </Extension>
+        <Extension Category="windows.updateTask" EntryPoint="Timetable.UWPBackground.ServiceComplete"/>
+      </Extensions>
     </Application>
   </Applications>
 
