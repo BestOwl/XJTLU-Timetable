@@ -1,0 +1,30 @@
+name: UWP CI
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: [windows-latest]
+
+    steps:
+    - uses: actions/checkout@v1
+    
+    - env:
+        buildPlatform: x86|x64|ARM
+        appxPackageDir: ./_appxPackage
+        configuration: Release
+        vsPlatform: x86
+
+    - name: Setup VS Dev Environment
+      uses: seanmiddleditch/gha-setup-vsdevenv@v1
+      with: 
+        components: Microsoft.VisualStudio.Workload.Universal; Microsoft.VisualStudio.Component.Windows10SDK.18362
+      
+    - name: Build UWP Project
+      run: msbuild.exe ./XJTLU-Timetable.sln/Timetable.UWP.csproj /p:Platform="${vsPlatform}" /p:Configuration="${configuration}" /p:AppxBundlePlatforms="$(buildPlatform)" /p:AppxPackageDir="$(appxPackageDir)" /p:AppxBundle=Always /p:UapAppxPackageBuildMode=StoreUpload'
+      
+    - name: Upload artifact
+      uses: actions/upload-artifact@v1.0.0
+      with:
+        path: ${appxPackageDir}/*
