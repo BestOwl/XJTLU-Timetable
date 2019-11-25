@@ -14,7 +14,8 @@ jobs:
     runs-on: [windows-2019]
 
     steps:
-    - uses: actions/checkout@v1
+    - name: Check out repo
+      uses: actions/checkout@v1
 
     - name: Setup VS Dev Environment
       uses: seanmiddleditch/gha-setup-vsdevenv@v1
@@ -23,6 +24,12 @@ jobs:
     
     - name: Setup MSBuild
       uses: warrenbuckley/Setup-MSBuild@v1
+      
+    - name: Setup Nuget
+      uses: warrenbuckley/Setup-Nuget@v1
+      
+    - name: Restore Nuget Packages
+      run: nuget resotre ./Timetable.UWP/Timetable.UWP.csproj -Recursive
       
     - name: Build UWP Project
       run: 
