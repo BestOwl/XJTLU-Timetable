@@ -23,7 +23,7 @@ jobs:
       
     - name: Build UWP Project
       run: 
-        msbuild.exe ./XJTLU-Timetable.sln/Timetable.UWP.csproj 
+        msbuild.exe ./Timetable.UWP/Timetable.UWP.csproj 
           /p:Platform="${env:vsPlatform}" 
           /p:Configuration="${env:configuration}" 
           /p:AppxBundlePlatforms="${env:buildPlatform}" 
