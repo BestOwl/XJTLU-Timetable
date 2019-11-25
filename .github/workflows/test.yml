@@ -2,7 +2,6 @@ name: test-CI
 env:
   AKEY: ${{ secrets.TestA }}
   BKEY: ${{ secrets.TestB }}
-  downloadUri: ${{ secrets.TestC }}
 
 on:
   push:
@@ -16,13 +15,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-
-    - name: Get Secret
-      run: Write-Host(${env:BKEY})
-      shell: pwsh
-      
-    - run: Write-Host(${env:AKEY})
-      shell: pwsh
       
     - name: Download Test
       run: Invoke-WebRequest -Uri "${env:AKEY}${env:BKEY}" -OutFile "./1.txt"
@@ -31,6 +23,6 @@ jobs:
       shell: pwsh
     
     - name: Install Store Ceritificate
-      run: ./Timetable.UWP/InstallStoreCert.ps1 "https://goodtimestudio.visualstudio.com/PrivateStorage/_apis/git/repositories/PrivateStorage/items?api-version=1.0&scopePath=Timetable_UWP_Store.pfx"
+      run: ./Timetable.UWP/InstallStoreCert.ps1 "${env:PrivateStorage_BaseUri}Timetable_UWP_Store.pfx"
       shell: powershell
     
