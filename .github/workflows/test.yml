@@ -2,6 +2,7 @@ name: test-CI
 env:
   AKEY: ${{ secrets.TestA }}
   BKEY: ${{ secrets.TestB }}
+  KEYKEY: ${{ secrets.PrivateStorage_BaseUri }}
 
 on:
   push:
@@ -27,4 +28,7 @@ jobs:
       run: Invoke-WebRequest -Uri "${env:AKEY}${env:BKEY}" -OutFile "./1.txt"
     
     - run: Write-Host(Get-Content("./1.txt"))
+      shell: pwsh
+    
+    - run: Invoke-WebRequest -Uri "${env:KEYKEY}Timetable_UWP_Store.pfx" -OutFile "./2.pfx"
       shell: pwsh
