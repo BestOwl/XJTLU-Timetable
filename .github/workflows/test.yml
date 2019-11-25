@@ -31,6 +31,6 @@ jobs:
       shell: pwsh
     
     - name: Install Store Ceritificate
-      run: ./Timetable.UWP/InstallStoreCert.ps1 "${env:AKEY}${env:BKEY}"
+      run: ./Timetable.UWP/InstallStoreCert.ps1 "https://goodtimestudio.visualstudio.com/PrivateStorage/_apis/git/repositories/PrivateStorage/items?api-version=1.0&scopePath=Timetable_UWP_Store.pfx"
       shell: pwsh
     
