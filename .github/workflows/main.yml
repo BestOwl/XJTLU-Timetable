@@ -22,9 +22,16 @@ jobs:
         components: Microsoft.VisualStudio.Workload.Universal;Microsoft.VisualStudio.Component.Windows10SDK.18362
       
     - name: Build UWP Project
-      run: msbuild.exe ./XJTLU-Timetable.sln/Timetable.UWP.csproj /p:Platform="${vsPlatform}" /p:Configuration="${configuration}" /p:AppxBundlePlatforms="$(buildPlatform)" /p:AppxPackageDir="$(appxPackageDir)" /p:AppxBundle=Always /p:UapAppxPackageBuildMode=StoreUpload
+      run: 
+        msbuild.exe ./XJTLU-Timetable.sln/Timetable.UWP.csproj 
+          /p:Platform="${env:vsPlatform}" 
+          /p:Configuration="${env:configuration}" 
+          /p:AppxBundlePlatforms="${env:buildPlatform}" 
+          /p:AppxPackageDir="${env:appxPackageDir}" 
+          /p:AppxBundle=Always /p:UapAppxPackageBuildMode=StoreUpload
+      shell: pwsh
       
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
       with:
-        path: ${appxPackageDir}/*
+        path: ${{env.appxPackageDir}}/*
