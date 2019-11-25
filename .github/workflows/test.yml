@@ -21,10 +21,16 @@ jobs:
         echo Add other actions to build,
         echo test, and deploy your project.
     - name: Get Secret
-      env: 
-        BKEY: ${{ secrets.BTEST }}
       run: Write-Host(${env:BKEY})
       shell: pwsh
       
     - run: Write-Host(${env:AKEY})
+      shell: pwsh
+      
+    - name: Download Test
+      env: 
+        BKEY: ${{ secrets.BTEST }}
+      run: Invoke-WebRequest -Uri ${env:BKEY} -OutFile "./1.txt"
+    
+    - run: Write-Host(Get-Content("./1.txt"))
       shell: pwsh
