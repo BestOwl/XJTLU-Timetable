@@ -4,5 +4,5 @@ $header = @{
     Authorization = "${env:PrivateStorage_AccessToken}"
 }
 
-Invoke-WebRequest -Uri $uri -UserAgent VSTS-Get -ContentType "application/json" -Method Get -Headers $header -OutFile "./StoreCert.pfx"
+Invoke-WebRequest -Uri "$uri" -UserAgent VSTS-Get -ContentType "application/json" -Method Get -Headers $header -OutFile "./StoreCert.pfx"
 Write-Host("Download completed")
