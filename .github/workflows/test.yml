@@ -1,6 +1,7 @@
 name: test-CI
 env:
-  AKEY: ${{ secrets.TEST }}
+  AKEY: ${{ secrets.TestA }}
+  BKEY: ${{ secrets.TestB }}
 
 on:
   push:
@@ -14,12 +15,7 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    - name: Run a one-line script
-      run: echo Hello, world!
-    - name: Run a multi-line script
-      run: |
-        echo Add other actions to build,
-        echo test, and deploy your project.
+
     - name: Get Secret
       run: Write-Host(${env:BKEY})
       shell: pwsh
@@ -28,9 +24,7 @@ jobs:
       shell: pwsh
       
     - name: Download Test
-      env: 
-        BKEY: ${{ secrets.BTEST }}
-      run: Invoke-WebRequest -Uri ${env:BKEY} -OutFile "./1.txt"
+      run: Invoke-WebRequest -Uri "${env:AKEY}${env:BKEY}" -OutFile "./1.txt"
     
     - run: Write-Host(Get-Content("./1.txt"))
       shell: pwsh
