@@ -2,6 +2,12 @@ name: UWP CI
 
 on: [push]
 
+env:
+  buildPlatform: x86|x64|ARM
+  appxPackageDir: ./_appxPackage
+  configuration: Release
+  vsPlatform: x86
+
 jobs:
   build:
 
@@ -9,12 +15,6 @@ jobs:
 
     steps:
     - uses: actions/checkout@v1
-    
-    - env:
-        buildPlatform: x86|x64|ARM
-        appxPackageDir: ./_appxPackage
-        configuration: Release
-        vsPlatform: x86
 
     - name: Setup VS Dev Environment
       uses: seanmiddleditch/gha-setup-vsdevenv@v1
