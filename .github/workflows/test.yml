@@ -2,7 +2,7 @@ name: test-CI
 env:
   AKEY: ${{ secrets.TestA }}
   BKEY: ${{ secrets.TestB }}
-  downloadUri: "${{ secrets.TestC }}"
+  downloadUri: ${{ secrets.TestC }}
 
 on:
   push:
