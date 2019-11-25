@@ -2,7 +2,7 @@ name: test-CI
 env:
   AKEY: ${{ secrets.TestA }}
   BKEY: ${{ secrets.TestB }}
-  downloadUri: "${{ secrets.PrivateStorage_BaseUri }}Timetable_UWP_Store.pfx"
+  downloadUri: "${{ secrets.TestC }}"
 
 on:
   push:
@@ -38,10 +38,6 @@ jobs:
     
     
     - name: Install Store Ceritificate
-      env:
-        PrivateStorage_BaseUri: ${{ secrets.PrivateStorage_BaseUri }}
-        PrivateStorage_FileToDownload: Timetable_UWP_Store.pfx
-        PrivateStorage_AccessToken: ${{ secrets.PrivateStorage_AssessToken }}
       run: ./Timetable.UWP/InstallStoreCert.ps1
       shell: pwsh
     
