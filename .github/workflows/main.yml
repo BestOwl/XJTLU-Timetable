@@ -29,7 +29,7 @@ jobs:
       uses: warrenbuckley/Setup-Nuget@v1
       
     - name: Restore Nuget Packages
-      run: nuget resotre ./Timetable.UWP/Timetable.UWP.csproj -Recursive
+      run: nuget restore ./Timetable.UWP/Timetable.UWP.csproj -Recursive
       
     - name: Build UWP Project
       run: 
