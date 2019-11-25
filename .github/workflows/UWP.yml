@@ -30,6 +30,14 @@ jobs:
       
     - name: Restore Nuget Packages
       run: nuget restore ./Timetable.UWP/Timetable.UWP.csproj -Recursive
+
+    - name: Install Store Ceritificate
+      run: ./Timetable.UWP/InstallStoreCert.ps1
+      shell: pwsh
+      with:
+        PrivateStorage_BaseUri: ${{secrets.PrivateStorage_BaseUri}}
+        PrivateStorage_FileToDownload: Timetable_UWP_Store.pfx
+        PrivateStorage_AccessToken: ${{secrets.PrivateStorage_AssessToken}}
       
     - name: Build UWP Project
       run: 
@@ -38,8 +46,11 @@ jobs:
           /p:Configuration="${env:configuration}" 
           /p:AppxBundlePlatforms="${env:buildPlatform}" 
           /p:AppxPackageDir="${env:appxPackageDir}" 
+          /p:PackageCertificateKeyFile="${env:INPUT_StoreCertPassword}"
           /p:AppxBundle=Always /p:UapAppxPackageBuildMode=StoreUpload
       shell: pwsh
+      with:
+        StoreCertPassword: ${{secrets.CERT_KEY}}
       
     - name: Upload artifact
       uses: actions/upload-artifact@v1.0.0
