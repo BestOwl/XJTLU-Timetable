@@ -33,15 +33,15 @@ jobs:
 
     - name: Install Store Ceritificate
       env:
-        PrivateStorage_BaseUri: ${{secrets.PrivateStorage_BaseUri}}
+        PrivateStorage_BaseUri: ${{ secrets.PrivateStorage_BaseUri }}
         PrivateStorage_FileToDownload: Timetable_UWP_Store.pfx
-        PrivateStorage_AccessToken: ${{secrets.PrivateStorage_AssessToken}}
+        PrivateStorage_AccessToken: ${{ secrets.PrivateStorage_AssessToken }}
       run: ./Timetable.UWP/InstallStoreCert.ps1
       shell: pwsh
       
     - name: Build UWP Project
       env:
-        StoreCertPassword: ${{secrets.CERT_KEY}}
+        StoreCertPassword: ${{ secrets.CERT_KEY }}
       run: 
         msbuild.exe ./Timetable.UWP/Timetable.UWP.csproj 
           /p:Platform="${env:vsPlatform}" 
