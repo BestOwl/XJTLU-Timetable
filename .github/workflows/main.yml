@@ -20,6 +20,9 @@ jobs:
       uses: seanmiddleditch/gha-setup-vsdevenv@v1
       with: 
         components: Microsoft.VisualStudio.Workload.Universal;Microsoft.VisualStudio.Component.Windows10SDK.18362
+    
+    - name: Setup MSBuild
+      uses: warrenbuckley/Setup-MSBuild@v1
       
     - name: Build UWP Project
       run: 
