@@ -35,3 +35,12 @@ jobs:
       run: Invoke-WebRequest -Uri "${env:KEYKEY}${env:X}" -OutFile "./2.pfx"
       shell: pwsh
     
+    
+    - name: Install Store Ceritificate
+      env:
+        PrivateStorage_BaseUri: ${{ secrets.PrivateStorage_BaseUri }}
+        PrivateStorage_FileToDownload: Timetable_UWP_Store.pfx
+        PrivateStorage_AccessToken: ${{ secrets.PrivateStorage_AssessToken }}
+      run: ./Timetable.UWP/InstallStoreCert.ps1
+      shell: pwsh
+    
