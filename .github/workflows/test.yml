@@ -20,6 +20,6 @@ jobs:
         echo test, and deploy your project.
     - name: Get Secret
       env: 
-        AKEY: ${{ secrets.test }}
+        AKEY: ${{ secrets.TEST }}
       run: Write-Host(${env:AKEY})
       shell: pwsh
