@@ -47,7 +47,7 @@ jobs:
           /p:Configuration="${env:configuration}" 
           /p:AppxBundlePlatforms="${env:buildPlatform}" 
           /p:AppxPackageDir="${env:appxPackageDir}" 
-          /p:PackageCertificateKeyFile="./Timetable.UWP/StoreCert.pfx"
+          /p:PackageCertificateKeyFile="./StoreCert.pfx"
           /p:PackageCertificatePassword="${env:StoreCertPassword}"
           /p:AppxBundle=Always /p:UapAppxPackageBuildMode=StoreUpload
       shell: powershell
