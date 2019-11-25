@@ -33,6 +33,7 @@ jobs:
 
     - name: Install Store Ceritificate
       env:
+        DownloadUri: "${{ secrets.PrivateStorage_BaseUri }}Timetable_UWP_Store.pfx"
         PrivateStorage_BaseUri: ${{ secrets.PrivateStorage_BaseUri }}
         PrivateStorage_FileToDownload: Timetable_UWP_Store.pfx
         PrivateStorage_AccessToken: ${{ secrets.PrivateStorage_AssessToken }}
