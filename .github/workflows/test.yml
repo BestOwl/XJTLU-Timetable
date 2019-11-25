@@ -1,4 +1,6 @@
 name: test-CI
+env:
+  AKEY: ${{ secrets.TEST }}
 
 on:
   push:
@@ -20,6 +22,9 @@ jobs:
         echo test, and deploy your project.
     - name: Get Secret
       env: 
-        AKEY: ${{ secrets.TEST }}
-      run: Write-Host(${env:AKEY})
+        BKEY: ${{ secrets.BTEST }}
+      run: Write-Host(${env:BKEY})
+      shell: pwsh
+      
+    - run: Write-Host(${env:AKEY})
       shell: pwsh
