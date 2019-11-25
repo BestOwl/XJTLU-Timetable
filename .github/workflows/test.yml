@@ -2,6 +2,7 @@ name: test-CI
 env:
   AKEY: ${{ secrets.TestA }}
   BKEY: ${{ secrets.TestB }}
+  downloadUri: "${{ secrets.PrivateStorage_BaseUri }}Timetable_UWP_Store.pfx"
 
 on:
   push:
